@@ -9,7 +9,6 @@ from xdcc_dl.entities import XDCCPack, IrcServer
 import os
 from pathlib import Path
 
-xdccCsv = r"./Files/xdcc.csv"
 sqlServerName = "DESKTOP-V6UNK5R"
 database = "master"
 driverUrl = "https://nibl.co.uk/search?"
@@ -46,7 +45,7 @@ cursor.execute(
 )
 downloadList = cursor.fetchall()
 
-chromeDriverPath = r"./Files/chromedriver_98"
+chromeDriverPath = r"../Chrome Drivers/chromedriver_98"
 options = webdriver.ChromeOptions()
 options.add_argument("--headless")
 driver = webdriver.Chrome(
