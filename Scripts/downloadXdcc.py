@@ -168,7 +168,7 @@ for row in downloadList:
 
 driver.quit()
 
-if 1==2:
+if 1==1:
     for x in botPackList:
         botName = x[0]
         xdccPack = x[1]
