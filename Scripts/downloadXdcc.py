@@ -13,7 +13,7 @@ def dbConnect(sqlServerName, database):
         'Driver={SQL Server};'
         'Server=' + sqlServerName + ';'
         'Database=' + database + ';'
-         'Trusted_Connection=yes;'
+        'Trusted_Connection=yes;'
     )
     return [conn, conn.cursor()]
 
@@ -84,11 +84,11 @@ for row in downloadList:
 
     if not done:
         if days_without_episode > 30:
-            cursor.execute("""
+            cursor.execute(f"""
                             update anime_to_download
                             set done = 1, download = 0
-                            where id = {0}
-            """.format(id))
+                            where id = {id}
+            """)
             continue
         loopCounter = 0
         while True:
@@ -112,17 +112,17 @@ for row in downloadList:
                                                                                           "@data-botname='ARUTHA-BATCH|1080p']")
             if len(buttons) == 0:
                 if loopCounter == 0:
-                    cursor.execute("""
+                    cursor.execute(f"""
                                     update anime_to_download
-                                    set days_without_episode = {0} + 1
-                                    where id = {1}
-                    """.format(days_without_episode, id))
+                                    set days_without_episode = {days_without_episode} + 1
+                                    where id = {id}
+                    """)
                 else:
-                    cursor.execute("""
+                    cursor.execute(f"""
                                     update anime_to_download
                                     set days_without_episode = 0
-                                    where id = {0}
-                    """.format(id))
+                                    where id = {id}
+                    """)
                 break
             button = buttons[0]
             botName = button.get_attribute("data-botname")
@@ -137,32 +137,32 @@ for row in downloadList:
                         \rEpisode: {episode}
             """)
 
-            cursor.execute("select count(*) from information_schema.tables where table_name = '{0}'".format(dir_name.replace(" ","_")))
+            cursor.execute(f"select count(*) from information_schema.tables where table_name = '{dir_name.replace(' ','_')}'")
             checkTableExists = cursor.fetchall()[0][0]
             if checkTableExists == 0:
-                cursor.execute("""
-                    create table [{0}] (
+                cursor.execute(f"""
+                    create table [{dir_name.replace(' ','_')}] (
                         id int IDENTITY(1,1) PRIMARY KEY,
                         xdcc varchar(100),
                         season int,
                         episode int,
                         downloaded bit default 0
                     )
-                """.format(dir_name.replace(" ","_")))
+                """)
 
-            cursor.execute("select count(*) from [{0}] where episode = {1} and season = {2}".format(dir_name.replace(" ","_"), episode, current_season))
+            cursor.execute(f"select count(*) from [{dir_name.replace(' ','_')}] where episode = {episode} and season = {current_season}")
             checkEpisodeExists = cursor.fetchall()[0][0]
             if checkEpisodeExists == 0:
-                cursor.execute("insert into [{0}] (episode, xdcc, season) values ({1},'{2}',{3})".format(dir_name.replace(" ","_"), episode, xdcc, current_season))
+                cursor.execute(f"insert into [{dir_name.replace(' ','_')}] (episode, xdcc, season) values ({episode},'{xdcc}',{current_season})")
 
             episode += 1
             loopCounter += 1
 
-        cursor.execute("""
+        cursor.execute(f"""
                         update anime_to_download
-                        set episode = {0}
-                        where id = {1}
-        """.format(episode, id))
+                        set episode = {episode}
+                        where id = {id}
+        """)
 
         cursor.commit()
 
