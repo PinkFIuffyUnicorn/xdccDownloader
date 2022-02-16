@@ -1,39 +1,47 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-import pyperclip as pc
 import pyodbc
 from datetime import datetime
 from xdcc_dl.xdcc import download_packs
 from xdcc_dl.entities import XDCCPack, IrcServer
 import os
-from pathlib import Path
 import configparser
 from plexapi.myplex import MyPlexAccount
 
+def dbConnect(sqlServerName, database):
+    conn = pyodbc.connect(
+        'Driver={SQL Server};'
+        'Server=' + sqlServerName + ';'
+        'Database=' + database + ';'
+         'Trusted_Connection=yes;'
+    )
+    return [conn, conn.cursor()]
+
+# Config File
 config = configparser.ConfigParser()
 config.read("config.ini")
+# Database Config
 databaseConfig = config["Database"]
-driverConfig = config["Driver"]
-plexCredentials = config["PlexCredentials"]
-
 sqlServerName = databaseConfig["serverName"]
 database = databaseConfig["database"]
+# Driver Config
+driverConfig = config["Driver"]
 driverUrl = driverConfig["driverUrl"]
-botPackList = []
 parentDir = driverConfig["parentDir"]
+chromeDriverPath = driverConfig["chromeDriverPath"]
+# Plex Config
+plexCredentials = config["PlexCredentials"]
 username = plexCredentials["username"]
 password = plexCredentials["password"]
 serverName = plexCredentials["serverName"]
-
+# Other Variables
+botPackList = []
 currentDatetime = datetime.now()
 formattedCurrentDatetime = currentDatetime.strftime("%d-%m-%Y %H:%M:%S")
-
-conn = pyodbc.connect('Driver={SQL Server};'
-                      'Server='+sqlServerName+';'
-                      'Database='+database+';'
-                      'Trusted_Connection=yes;')
-cursor = conn.cursor()
+# Database Connection Variables
+db = dbConnect(sqlServerName, database)
+conn = db[0]
+cursor = db[1]
 
 cursor.execute(
     "select "
@@ -56,7 +64,6 @@ cursor.execute(
 )
 downloadList = cursor.fetchall()
 
-chromeDriverPath = driverConfig["chromeDriverPath"]
 options = webdriver.ChromeOptions()
 options.add_argument("--headless")
 driver = webdriver.Chrome(
@@ -118,11 +125,6 @@ for row in downloadList:
                     """.format(id))
                 break
             button = buttons[0]
-            #button.click()
-            #xdcc = pc.paste()
-            #xdccSplit = xdcc.split()
-            #botName = xdccSplit[1]
-            #xdccPack = xdccSplit[4].replace("#","")
             botName = button.get_attribute("data-botname")
             xdccPack = button.get_attribute("data-botpack")
             xdcc = f"/msg {botName}|{quality}p xdcc send #{xdccPack}"
@@ -166,7 +168,7 @@ for row in downloadList:
 
 driver.quit()
 
-if 1==1:
+if 1==2:
     for x in botPackList:
         botName = x[0]
         xdccPack = x[1]
