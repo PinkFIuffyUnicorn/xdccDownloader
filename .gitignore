@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# My Ignores
+./Scripts/config.ini
+./Scripts/testFile.py

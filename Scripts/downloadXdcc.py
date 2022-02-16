@@ -8,12 +8,23 @@ from xdcc_dl.xdcc import download_packs
 from xdcc_dl.entities import XDCCPack, IrcServer
 import os
 from pathlib import Path
+import configparser
+from plexapi.myplex import MyPlexAccount
 
-sqlServerName = "DESKTOP-V6UNK5R"
-database = "master"
-driverUrl = "https://nibl.co.uk/search?"
+config = configparser.ConfigParser()
+config.read("config.ini")
+databaseConfig = config["Database"]
+driverConfig = config["Driver"]
+plexCredentials = config["PlexCredentials"]
+
+sqlServerName = databaseConfig["serverName"]
+database = databaseConfig["database"]
+driverUrl = driverConfig["driverUrl"]
 botPackList = []
-parentDir = "F:\Anime"
+parentDir = driverConfig["parentDir"]
+username = plexCredentials["username"]
+password = plexCredentials["password"]
+serverName = plexCredentials["serverName"]
 
 currentDatetime = datetime.now()
 formattedCurrentDatetime = currentDatetime.strftime("%d-%m-%Y %H:%M:%S")
@@ -45,7 +56,7 @@ cursor.execute(
 )
 downloadList = cursor.fetchall()
 
-chromeDriverPath = r"../Chrome Drivers/chromedriver_98"
+chromeDriverPath = driverConfig["chromeDriverPath"]
 options = webdriver.ChromeOptions()
 options.add_argument("--headless")
 driver = webdriver.Chrome(
@@ -80,7 +91,7 @@ for row in downloadList:
             query = "query={0}".format(searchTerm)
             searchDriverUrl = "{0}{1}".format(driverUrl, query)
             driver.get(searchDriverUrl)
-            # if name == "Boku no Hero Academia" and episode < 14:
+            # if name == "Yuru Camp":
             #     buttons = driver.find_elements(By.XPATH, "//button[@data-botname='ARUTHA-BATCH|1080p']")
             if 1==2:
                 break
@@ -188,6 +199,12 @@ if 1==1:
         except Exception as e:
             print(e)
             continue
+
+    if botPackList != []:
+        account = MyPlexAccount(username, password)
+        plex = account.resource(serverName).connect()
+        animeLibrary = plex.library.section("Anime")
+        animeLibrary.update()
 
 conn.commit()
 conn.close()
