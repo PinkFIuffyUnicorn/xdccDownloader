@@ -1,3 +1,4 @@
 pyperclip~=1.8.2
 pyodbc~=4.0.32
 selenium~=4.0.0
+PlexAPI~=4.9.2
