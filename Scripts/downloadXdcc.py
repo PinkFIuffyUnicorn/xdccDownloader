@@ -1,21 +1,19 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import pyodbc
 from datetime import datetime
 from xdcc_dl.xdcc import download_packs
 from xdcc_dl.entities import XDCCPack, IrcServer
 import os
 import configparser
-from plexapi.myplex import MyPlexAccount
+from Scripts.databaseAccess import Database
+from Scripts.plexLibrary import PlexLibrary
 
-def dbConnect(sqlServerName, database):
-    conn = pyodbc.connect(
-        'Driver={SQL Server};'
-        'Server=' + sqlServerName + ';'
-        'Database=' + database + ';'
-        'Trusted_Connection=yes;'
-    )
-    return [conn, conn.cursor()]
+# Other Variables
+botPackList = []
+currentDatetime = datetime.now()
+formattedCurrentDatetime = currentDatetime.strftime("%d-%m-%Y %H:%M:%S")
+
+print(f"{formattedCurrentDatetime} | Started")
 
 # Config File
 config = configparser.ConfigParser()
@@ -34,14 +32,15 @@ plexCredentials = config["PlexCredentials"]
 username = plexCredentials["username"]
 password = plexCredentials["password"]
 serverName = plexCredentials["serverName"]
-# Other Variables
-botPackList = []
-currentDatetime = datetime.now()
-formattedCurrentDatetime = currentDatetime.strftime("%d-%m-%Y %H:%M:%S")
 # Database Connection Variables
-db = dbConnect(sqlServerName, database)
-conn = db[0]
-cursor = db[1]
+try:
+    databaseClass = Database(sqlServerName, database)
+    conn, cursor = databaseClass.dbConnect()
+except Exception as e:
+    print(f"{formattedCurrentDatetime} | Error Connecting to DB " + str(e).replace("'","''"))
+
+def formatError():
+    return "'" + str(e).replace("'","''") + "'"
 
 cursor.execute(
     "select "
@@ -57,7 +56,7 @@ cursor.execute(
     " where download = 1"
     # " and id not in (52, 73)"
     # " and name <> 'Boku no Hero Academia'"
-    # " and name = 'One Piece'"
+    # " and name = 'Platinum End'"
     # " where id = 54"
     # " where id in (71,72)"
     " order by name"
@@ -142,11 +141,13 @@ for row in downloadList:
             if checkTableExists == 0:
                 cursor.execute(f"""
                     create table [{dir_name.replace(' ','_')}] (
-                        id int IDENTITY(1,1) PRIMARY KEY,
-                        xdcc varchar(100),
-                        season int,
-                        episode int,
-                        downloaded bit default 0
+                        id int IDENTITY(1,1) PRIMARY KEY
+                        , xdcc varchar(100)
+                        , season int
+                        , episode int
+                        , downloaded bit default 0
+                        , error varchar(8000)
+                        , is_error bit default 0
                     )
                 """)
 
@@ -193,20 +194,29 @@ if 1==1:
         fileName = f"{animeName} - s{current_season}e{seasonEpisode} (1080p) [{episode}].mkv"
 
         try:
+            print(f"{formattedCurrentDatetime} | Started File Download")
+            print(f"Downloading: {fileName}")
             packSearch.set_filename(fileName)
             packSearch.set_directory(animeSeasonDir)
             download_packs([packSearch])
             cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 1 where episode = {episode} and season = {x[4]}")
             cursor.commit()
+
         except Exception as e:
-            print(e)
+            print(f"{formattedCurrentDatetime} | Error Downloading File")
+            cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = " + "'" + formatError() + "'" + f" where episode = {episode} and season = {x[4]}")
+            cursor.commit()
             continue
 
     if botPackList != []:
-        account = MyPlexAccount(username, password)
-        plex = account.resource(serverName).connect()
-        animeLibrary = plex.library.section("Anime")
-        animeLibrary.update()
+        print(f"{formattedCurrentDatetime} | Updating Plex Library")
+        try:
+            # updatePlexLibrary(username, password, serverName, "Anime")
+            myPlexLibrary = PlexLibrary(username, password, serverName, "Anime")
+            myPlexLibrary.updatePlexLibrary()
+        except Exception as e:
+            print(f"{formattedCurrentDatetime} | Error Updating Plex Library: " + formatError())
 
+print(f"{formattedCurrentDatetime} | Ended")
 conn.commit()
 conn.close()
