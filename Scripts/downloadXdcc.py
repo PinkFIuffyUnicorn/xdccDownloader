@@ -8,12 +8,16 @@ import configparser
 from Scripts.databaseAccess import Database
 from Scripts.plexLibrary import PlexLibrary
 
+def formatDate(date):
+    return date.strftime("%d-%m-%Y %H:%M:%S")
+
+def formatError():
+    return "'" + str(e).replace("'","''") + "'"
+
 # Other Variables
 botPackList = []
-currentDatetime = datetime.now()
-formattedCurrentDatetime = currentDatetime.strftime("%d-%m-%Y %H:%M:%S")
 
-print(f"{formattedCurrentDatetime} | Started")
+print(f"{formatDate(datetime.now())} | Started")
 
 # Config File
 config = configparser.ConfigParser()
@@ -37,10 +41,7 @@ try:
     databaseClass = Database(sqlServerName, database)
     conn, cursor = databaseClass.dbConnect()
 except Exception as e:
-    print(f"{formattedCurrentDatetime} | Error Connecting to DB " + str(e).replace("'","''"))
-
-def formatError():
-    return "'" + str(e).replace("'","''") + "'"
+    print(f"{formatDate(datetime.now())} | Error Connecting to DB " + str(e).replace("'","''"))
 
 cursor.execute(
     "select "
@@ -194,7 +195,7 @@ if 1==1:
         fileName = f"{animeName} - s{current_season}e{seasonEpisode} (1080p) [{episode}].mkv"
 
         try:
-            print(f"{formattedCurrentDatetime} | Started File Download")
+            print(f"{formatDate(datetime.now())} | Started File Download")
             print(f"Downloading: {fileName}")
             packSearch.set_filename(fileName)
             packSearch.set_directory(animeSeasonDir)
@@ -203,20 +204,20 @@ if 1==1:
             cursor.commit()
 
         except Exception as e:
-            print(f"{formattedCurrentDatetime} | Error Downloading File")
+            print(f"{formatDate(datetime.now())} | Error Downloading File")
             cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = " + "'" + formatError() + "'" + f" where episode = {episode} and season = {x[4]}")
             cursor.commit()
             continue
 
     if botPackList != []:
-        print(f"{formattedCurrentDatetime} | Updating Plex Library")
+        print(f"{formatDate(datetime.now())} | Updating Plex Library")
         try:
             # updatePlexLibrary(username, password, serverName, "Anime")
             myPlexLibrary = PlexLibrary(username, password, serverName, "Anime")
             myPlexLibrary.updatePlexLibrary()
         except Exception as e:
-            print(f"{formattedCurrentDatetime} | Error Updating Plex Library: " + formatError())
+            print(f"{formatDate(datetime.now())} | Error Updating Plex Library: " + formatError())
 
-print(f"{formattedCurrentDatetime} | Ended")
+print(f"{formatDate(datetime.now())} | Ended")
 conn.commit()
 conn.close()
