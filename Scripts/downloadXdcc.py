@@ -1,3 +1,4 @@
+import sys
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -10,10 +11,13 @@ import os
 import configparser
 from Scripts.databaseAccess import Database
 from Scripts.plexLibrary import PlexLibrary
+from Scripts.customLogger import Logger
 
 def currentTimestamp(type="print"):
     if type.lower() == "file":
         return datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
+    elif type.lower() == "db":
+        return datetime.now().strftime("%d_%m_%Y")
     return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
 def formatError(errorMsg):
@@ -21,9 +25,11 @@ def formatError(errorMsg):
 
 # Other Variables
 botPackList = []
-dbBackupPath = rf"C:\Users\Nabernik\Desktop\GitHub\xdccDownloader\DB Backups\masterBKP_{currentTimestamp('file')}.bak"
+dbBackupPath = rf"C:\Users\Nabernik\Desktop\GitHub\xdccDownloader\DB Backups\masterBKP_{currentTimestamp('db')}.bak"
+logger = Logger().log()
 
 print(f"{currentTimestamp()} | Script Started")
+logger.info("Script Started")
 
 # Config File
 config = configparser.ConfigParser()
@@ -36,7 +42,6 @@ database = databaseConfig["database"]
 driverConfig = config["Driver"]
 driverUrl = driverConfig["driverUrl"]
 parentDir = driverConfig["parentDir"]
-chromeDriverPath = driverConfig["chromeDriverPath"]
 # Plex Config
 plexCredentials = config["PlexCredentials"]
 username = plexCredentials["username"]
@@ -47,8 +52,11 @@ try:
     databaseClass = Database(sqlServerName, database)
     conn, cursor = databaseClass.dbConnect()
     print(f"{currentTimestamp()} | DB Connection successful")
+    logger.info("DB Connection successful")
 except Exception as e:
-    print(f"{currentTimestamp()} | Error Connecting to DB " + str(e).replace("'","''"))
+    print(f"{currentTimestamp()} | Error Connecting to DB " + str(e).replace("'", "''"))
+    logger.error("Error Connecting to DB " + str(e).replace("'", "''"))
+    sys.exit(1)
 
 cursor.execute(
     "select "
@@ -64,25 +72,20 @@ cursor.execute(
     " where download = 1"
     # " and id not in (52, 73)"
     # " and name <> 'Boku no Hero Academia'"
-    " and name = 'Death Parade'"
+    # " and name = 'Death Parade'"
     # " where id = 54"
     # " where id in (71,72)"
     " order by name"
 )
 downloadList = cursor.fetchall()
 
-# options = webdriver.ChromeOptions()
-# options.add_argument("--headless")
-# driver = webdriver.Chrome(
-#     executable_path=chromeDriverPath
-#     , options=options
-# )
 options = Options()
 options.add_argument("--headless")
 driver = webdriver.Chrome(service=Service(
     ChromeDriverManager().install())
     , options=options
 )
+logger.debug("Driver Start")
 driver.get(driverUrl)
 
 for row in downloadList:
@@ -102,6 +105,7 @@ for row in downloadList:
                             set done = 1, download = 0
                             where id = {id}
             """)
+            logger.info(f"Updated Anime ({name}) to done")
             continue
         loopCounter = 0
         while True:
@@ -110,6 +114,9 @@ for row in downloadList:
             searchTerm = "{0} - {1} {2}p".format(name, "0" + str(episode) if len(str(episode)) == 1 else episode, quality) # Shiroi Suna no Aquatope - 05 1080p
             query = "query={0}".format(searchTerm)
             searchDriverUrl = "{0}{1}".format(driverUrl, query)
+            logger.debug(f"searchTerm: {searchTerm}")
+            logger.debug(f"query: {query}")
+            logger.debug(f"searchDriverUrl: {searchDriverUrl}")
             driver.get(searchDriverUrl)
             # if name == "Toradora":
             #     buttons = driver.find_elements(By.XPATH, "//button[@data-botname='Ghouls|Arutha']")
@@ -123,6 +130,7 @@ for row in downloadList:
                                                                                           "@data-botname='CR-HOLLAND|NEW' or "
                                                                                           "@data-botname='CR-ARUTHA|NEW' or"
                                                                                           "@data-botname='ARUTHA-BATCH|1080p']")
+            logger.debug(f"Buttons: {buttons}")
             if len(buttons) == 0:
                 if loopCounter == 0:
                     cursor.execute(f"""
@@ -130,12 +138,14 @@ for row in downloadList:
                                     set days_without_episode = {days_without_episode} + 1
                                     where id = {id}
                     """)
+                    logger.debug(f"Episode not found for {name}")
                 else:
                     cursor.execute(f"""
                                     update anime_to_download
                                     set days_without_episode = 0
                                     where id = {id}
                     """)
+                    logger.debug(f"Episode found for {name}")
                 break
             button = buttons[0]
             botName = button.get_attribute("data-botname")
@@ -143,6 +153,11 @@ for row in downloadList:
             xdcc = f"/msg {botName}|{quality}p xdcc send #{xdccPack}"
 
             botPackList.append([botName, xdccPack, dir_name, episode, current_season])
+            logger.debug(f"botName: {botName}")
+            logger.debug(f"xdcc: {xdcc}")
+            logger.debug(f"dir_name: {dir_name}")
+            logger.debug(f"episode: {episode}")
+            logger.debug(f"current_season: {current_season}")
 
             print(f"""
                         \rName: {name}
@@ -150,12 +165,16 @@ for row in downloadList:
                         \rEpisode: {episode}
                         \rXdcc: {xdcc}
             """)
+            logger.info(f"Name: {name}")
+            logger.info(f"Dir Name: {dir_name}")
+            logger.info(f"Episode: {episode}")
+            logger.info(f"Xdcc: {xdcc}")
 
             cursor.execute(f"select count(*) from information_schema.tables where table_name = '{dir_name.replace(' ','_')}'")
             checkTableExists = cursor.fetchall()[0][0]
             if checkTableExists == 0:
                 cursor.execute(f"""
-                    create table [{dir_name.replace(' ','_')}] (
+                    create table [{dir_name.replace(' ', '_')}] (
                         id int IDENTITY(1,1) PRIMARY KEY
                         , xdcc varchar(100)
                         , season int
@@ -165,11 +184,13 @@ for row in downloadList:
                         , is_error bit default 0
                     )
                 """)
+                logger.debug(f"Added new Anime table ({dir_name.replace(' ', '_')})")
 
             cursor.execute(f"select count(*) from [{dir_name.replace(' ','_')}] where episode = {episode} and season = {current_season}")
             checkEpisodeExists = cursor.fetchall()[0][0]
             if checkEpisodeExists == 0:
                 cursor.execute(f"insert into [{dir_name.replace(' ','_')}] (episode, xdcc, season) values ({episode},'{xdcc}',{current_season})")
+                logger.debug(f"Inserted new episode into Anime table ({dir_name.replace(' ','_')})")
 
             episode += 1
             loopCounter += 1
@@ -179,10 +200,12 @@ for row in downloadList:
                         set episode = {episode}
                         where id = {id}
         """)
+        logger.debug(f"Updated Anime ({name}) episode")
 
         cursor.commit()
 
 driver.quit()
+logger.debug("Driver Quit")
 
 if 1==1:
     downloadCounter = 0
@@ -213,13 +236,17 @@ if 1==1:
         try:
             print(f"{currentTimestamp()} | Started File Download")
             print(f"Downloading: {fileName} | {downloadCounter}/{len(botPackList)}")
+            logger.info("Started File Download")
+            logger.info(f"Downloading: {fileName} | {downloadCounter}/{len(botPackList)}")
             packSearch.set_filename(fileName)
             packSearch.set_directory(animeSeasonDir)
             download_packs([packSearch])
+            logger.debug("Download Successful")
             cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 1 where episode = {episode} and season = {x[4]}")
             cursor.commit()
         except Exception as e:
             print(f"{currentTimestamp()} | Error Downloading File")
+            logger.error("Error Downloading File")
             # cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = " + "'" + formatError(e) + "'" + f" where episode = {episode} and season = {x[4]}")
             cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = '{formatError(e)}' where episode = {episode} and season = {x[4]}")
             cursor.commit()
@@ -227,17 +254,22 @@ if 1==1:
 
     if botPackList != []:
         print(f"{currentTimestamp()} | Updating Plex Library")
+        logger.info("Updating Plex Library")
         try:
             # updatePlexLibrary(username, password, serverName, "Anime")
             myPlexLibrary = PlexLibrary(username, password, serverName, "Anime")
             myPlexLibrary.updatePlexLibrary()
         except Exception as e:
             print(f"{currentTimestamp()} | Error Updating Plex Library: " + formatError(e))
+            logger.error(f"Error Updating Plex Library: {formatError(e)}")
 
 print(f"{currentTimestamp()} | DB Backup Started")
+logger.info("DB Backup Started")
 databaseClass.dbBackup(conn, cursor, dbBackupPath)
 print(f"{currentTimestamp()} | DB Backup Ended")
+logger.info("DB Backup Ended")
 
 print(f"{currentTimestamp()} | Script Ended")
+logger.info("Script Ended")
 conn.commit()
 conn.close()
