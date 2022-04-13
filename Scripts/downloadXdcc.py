@@ -11,17 +11,19 @@ import configparser
 from Scripts.databaseAccess import Database
 from Scripts.plexLibrary import PlexLibrary
 
-def currentDate():
+def currentTimestamp(type="print"):
+    if type.lower() == "file":
+        return datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
     return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    # return date.strftime("%d-%m-%Y %H:%M:%S")
 
 def formatError(errorMsg):
     return str(errorMsg).replace("'","''")
 
 # Other Variables
 botPackList = []
+dbBackupPath = rf"C:\Users\Nabernik\Desktop\GitHub\xdccDownloader\DB Backups\masterBKP_{currentTimestamp('file')}.bak"
 
-print(f"{currentDate()} | Started")
+print(f"{currentTimestamp()} | Script Started")
 
 # Config File
 config = configparser.ConfigParser()
@@ -44,9 +46,9 @@ serverName = plexCredentials["serverName"]
 try:
     databaseClass = Database(sqlServerName, database)
     conn, cursor = databaseClass.dbConnect()
-    print(f"{currentDate()} | DB Connection successful")
+    print(f"{currentTimestamp()} | DB Connection successful")
 except Exception as e:
-    print(f"{currentDate()} | Error Connecting to DB " + str(e).replace("'","''"))
+    print(f"{currentTimestamp()} | Error Connecting to DB " + str(e).replace("'","''"))
 
 cursor.execute(
     "select "
@@ -209,7 +211,7 @@ if 1==1:
         fileName = f"{animeName} - s{current_season}e{seasonEpisode} (1080p) [{episode}].mkv"
 
         try:
-            print(f"{currentDate()} | Started File Download")
+            print(f"{currentTimestamp()} | Started File Download")
             print(f"Downloading: {fileName} | {downloadCounter}/{len(botPackList)}")
             packSearch.set_filename(fileName)
             packSearch.set_directory(animeSeasonDir)
@@ -217,21 +219,25 @@ if 1==1:
             cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 1 where episode = {episode} and season = {x[4]}")
             cursor.commit()
         except Exception as e:
-            print(f"{currentDate()} | Error Downloading File")
+            print(f"{currentTimestamp()} | Error Downloading File")
             # cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = " + "'" + formatError(e) + "'" + f" where episode = {episode} and season = {x[4]}")
             cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = '{formatError(e)}' where episode = {episode} and season = {x[4]}")
             cursor.commit()
             continue
 
     if botPackList != []:
-        print(f"{currentDate()} | Updating Plex Library")
+        print(f"{currentTimestamp()} | Updating Plex Library")
         try:
             # updatePlexLibrary(username, password, serverName, "Anime")
             myPlexLibrary = PlexLibrary(username, password, serverName, "Anime")
             myPlexLibrary.updatePlexLibrary()
         except Exception as e:
-            print(f"{currentDate()} | Error Updating Plex Library: " + formatError(e))
+            print(f"{currentTimestamp()} | Error Updating Plex Library: " + formatError(e))
 
-print(f"{currentDate()} | Ended")
+print(f"{currentTimestamp()} | DB Backup Started")
+databaseClass.dbBackup(conn, cursor, dbBackupPath)
+print(f"{currentTimestamp()} | DB Backup Ended")
+
+print(f"{currentTimestamp()} | Script Ended")
 conn.commit()
 conn.close()

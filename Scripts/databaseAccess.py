@@ -19,3 +19,10 @@ class Database():
             'Trusted_Connection=yes;'
         )
         return conn, conn.cursor()
+
+    def dbBackup(self, conn, cursor, path):
+        backup = rf"backup database [{self.database_name}] to disk = N'{path}'"
+        conn.autocommit = True
+        cursor.execute(backup)
+        while cursor.nextset():
+            pass
