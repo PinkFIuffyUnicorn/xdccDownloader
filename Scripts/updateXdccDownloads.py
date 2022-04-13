@@ -33,16 +33,18 @@ for row in tempViewResult:
     season = row[2]
     episode = row[3]
     downloaded = row[4]
-    tableName = row[5]
-    updateStatement = row[6]
+    error = row[5]
+    is_error = row[6]
+    tableName = row[7]
+    updateStatement = row[8]
     print(f"""
         Anime: {tableName}
         Episode = {episode}
         Xdcc: {xdcc}
     """)
 
-    #decision = input(f"Would you like to mark this xdcc for {tableName} - {episode} as downloaded(Y/N)?")
-    decision = "y"
+    decision = input(f"Would you like to mark this xdcc for {tableName} - {episode} as downloaded(Y/N)?")
+    #decision = "y"
 
     if decision.lower() in ("y","yes","d"):
         cursor.execute(updateStatement)

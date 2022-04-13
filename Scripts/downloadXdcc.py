@@ -1,4 +1,7 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from datetime import datetime
 from xdcc_dl.xdcc import download_packs
@@ -8,16 +11,17 @@ import configparser
 from Scripts.databaseAccess import Database
 from Scripts.plexLibrary import PlexLibrary
 
-def formatDate(date):
-    return date.strftime("%d-%m-%Y %H:%M:%S")
+def currentDate():
+    return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    # return date.strftime("%d-%m-%Y %H:%M:%S")
 
-def formatError():
-    return "'" + str(e).replace("'","''") + "'"
+def formatError(errorMsg):
+    return str(errorMsg).replace("'","''")
 
 # Other Variables
 botPackList = []
 
-print(f"{formatDate(datetime.now())} | Started")
+print(f"{currentDate()} | Started")
 
 # Config File
 config = configparser.ConfigParser()
@@ -40,8 +44,9 @@ serverName = plexCredentials["serverName"]
 try:
     databaseClass = Database(sqlServerName, database)
     conn, cursor = databaseClass.dbConnect()
+    print(f"{currentDate()} | DB Connection successful")
 except Exception as e:
-    print(f"{formatDate(datetime.now())} | Error Connecting to DB " + str(e).replace("'","''"))
+    print(f"{currentDate()} | Error Connecting to DB " + str(e).replace("'","''"))
 
 cursor.execute(
     "select "
@@ -57,17 +62,23 @@ cursor.execute(
     " where download = 1"
     # " and id not in (52, 73)"
     # " and name <> 'Boku no Hero Academia'"
-    # " and name = 'Platinum End'"
+    " and name = 'Death Parade'"
     # " where id = 54"
     # " where id in (71,72)"
     " order by name"
 )
 downloadList = cursor.fetchall()
 
-options = webdriver.ChromeOptions()
+# options = webdriver.ChromeOptions()
+# options.add_argument("--headless")
+# driver = webdriver.Chrome(
+#     executable_path=chromeDriverPath
+#     , options=options
+# )
+options = Options()
 options.add_argument("--headless")
-driver = webdriver.Chrome(
-    executable_path=chromeDriverPath
+driver = webdriver.Chrome(service=Service(
+    ChromeDriverManager().install())
     , options=options
 )
 driver.get(driverUrl)
@@ -98,8 +109,8 @@ for row in downloadList:
             query = "query={0}".format(searchTerm)
             searchDriverUrl = "{0}{1}".format(driverUrl, query)
             driver.get(searchDriverUrl)
-            # if name == "Yuru Camp":
-            #     buttons = driver.find_elements(By.XPATH, "//button[@data-botname='ARUTHA-BATCH|1080p']")
+            # if name == "Toradora":
+            #     buttons = driver.find_elements(By.XPATH, "//button[@data-botname='Ghouls|Arutha']")
             if 1==2:
                 break
             else:
@@ -135,6 +146,7 @@ for row in downloadList:
                         \rName: {name}
                         \rDir Name: {dir_name}
                         \rEpisode: {episode}
+                        \rXdcc: {xdcc}
             """)
 
             cursor.execute(f"select count(*) from information_schema.tables where table_name = '{dir_name.replace(' ','_')}'")
@@ -171,7 +183,9 @@ for row in downloadList:
 driver.quit()
 
 if 1==1:
+    downloadCounter = 0
     for x in botPackList:
+        downloadCounter+=1
         botName = x[0]
         xdccPack = x[1]
         animeName = x[2]
@@ -195,29 +209,29 @@ if 1==1:
         fileName = f"{animeName} - s{current_season}e{seasonEpisode} (1080p) [{episode}].mkv"
 
         try:
-            print(f"{formatDate(datetime.now())} | Started File Download")
-            print(f"Downloading: {fileName}")
+            print(f"{currentDate()} | Started File Download")
+            print(f"Downloading: {fileName} | {downloadCounter}/{len(botPackList)}")
             packSearch.set_filename(fileName)
             packSearch.set_directory(animeSeasonDir)
             download_packs([packSearch])
             cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 1 where episode = {episode} and season = {x[4]}")
             cursor.commit()
-
         except Exception as e:
-            print(f"{formatDate(datetime.now())} | Error Downloading File")
-            cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = " + "'" + formatError() + "'" + f" where episode = {episode} and season = {x[4]}")
+            print(f"{currentDate()} | Error Downloading File")
+            # cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = " + "'" + formatError(e) + "'" + f" where episode = {episode} and season = {x[4]}")
+            cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = '{formatError(e)}' where episode = {episode} and season = {x[4]}")
             cursor.commit()
             continue
 
     if botPackList != []:
-        print(f"{formatDate(datetime.now())} | Updating Plex Library")
+        print(f"{currentDate()} | Updating Plex Library")
         try:
             # updatePlexLibrary(username, password, serverName, "Anime")
             myPlexLibrary = PlexLibrary(username, password, serverName, "Anime")
             myPlexLibrary.updatePlexLibrary()
         except Exception as e:
-            print(f"{formatDate(datetime.now())} | Error Updating Plex Library: " + formatError())
+            print(f"{currentDate()} | Error Updating Plex Library: " + formatError(e))
 
-print(f"{formatDate(datetime.now())} | Ended")
+print(f"{currentDate()} | Ended")
 conn.commit()
 conn.close()
