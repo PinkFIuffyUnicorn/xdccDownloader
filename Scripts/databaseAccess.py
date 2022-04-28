@@ -1,5 +1,8 @@
 import pyodbc
 from dataclasses import dataclass
+import os
+import glob
+from datetime import datetime, timedelta
 
 @dataclass
 class Database():
@@ -26,3 +29,19 @@ class Database():
         cursor.execute(backup)
         while cursor.nextset():
             pass
+
+    def deleteOldBackups(self):
+        deletedFiles = []
+        os.chdir("../DB Backups")
+        for file in glob.glob("*.bak"):
+            fileExists = os.path.exists(file)
+            if fileExists:
+                filePath = os.path.abspath(file)
+                timestamp = int(os.path.getctime(filePath))
+                fileDate = datetime.utcfromtimestamp(timestamp)
+                currentDate = datetime.today() - timedelta(days=7)
+                deleteFile = fileDate < currentDate
+                if deleteFile:
+                    deletedFiles.append(file)
+                    os.remove(file)
+        return deletedFiles

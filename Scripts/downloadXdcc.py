@@ -69,10 +69,12 @@ cursor.execute(
     ", current_season as '6'"
     ", dir_name as '7'"
     " from anime_to_download"
-    " where download = 1"
+    " where 1 = 1"
+    " and download = 1"
     # " and id not in (52, 73)"
     # " and name <> 'Boku no Hero Academia'"
-    # " and name = 'Death Parade'"
+    " and name = 'Death Parade'"
+    # " and name = 'Tomodachi Game'"
     # " where id = 54"
     # " where id in (71,72)"
     " order by name"
@@ -128,8 +130,9 @@ for row in downloadList:
                                                                                           "@data-botname='CR-HOLLAND-IPv6|NEW' or "
                                                                                           "@data-botname='CR-ARUTHA-IPv6|NEW' or "
                                                                                           "@data-botname='CR-HOLLAND|NEW' or "
-                                                                                          "@data-botname='CR-ARUTHA|NEW' or"
-                                                                                          "@data-botname='ARUTHA-BATCH|1080p']")
+                                                                                          "@data-botname='CR-ARUTHA|NEW' or "
+                                                                                          "@data-botname='ARUTHA-BATCH|1080p' or "
+                                                                                          "@data-botname='Fincayra']")
             logger.debug(f"Buttons: {buttons}")
             if len(buttons) == 0:
                 if loopCounter == 0:
@@ -150,7 +153,8 @@ for row in downloadList:
             button = buttons[0]
             botName = button.get_attribute("data-botname")
             xdccPack = button.get_attribute("data-botpack")
-            xdcc = f"/msg {botName}|{quality}p xdcc send #{xdccPack}"
+            #xdcc = f"/msg {botName}|{quality}p xdcc send #{xdccPack}"
+            xdcc = f"/msg {botName} xdcc send #{xdccPack}"
 
             botPackList.append([botName, xdccPack, dir_name, episode, current_season])
             logger.debug(f"botName: {botName}")
@@ -242,12 +246,11 @@ if 1==1:
             packSearch.set_directory(animeSeasonDir)
             download_packs([packSearch])
             logger.debug("Download Successful")
-            cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 1 where episode = {episode} and season = {x[4]}")
+            cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 1, error is null, is_error = 0 where episode = {episode} and season = {x[4]}")
             cursor.commit()
         except Exception as e:
             print(f"{currentTimestamp()} | Error Downloading File")
             logger.error("Error Downloading File")
-            # cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = " + "'" + formatError(e) + "'" + f" where episode = {episode} and season = {x[4]}")
             cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = '{formatError(e)}' where episode = {episode} and season = {x[4]}")
             cursor.commit()
             continue
@@ -256,20 +259,20 @@ if 1==1:
         print(f"{currentTimestamp()} | Updating Plex Library")
         logger.info("Updating Plex Library")
         try:
-            # updatePlexLibrary(username, password, serverName, "Anime")
             myPlexLibrary = PlexLibrary(username, password, serverName, "Anime")
             myPlexLibrary.updatePlexLibrary()
         except Exception as e:
-            print(f"{currentTimestamp()} | Error Updating Plex Library: " + formatError(e))
             logger.error(f"Error Updating Plex Library: {formatError(e)}")
 
-print(f"{currentTimestamp()} | DB Backup Started")
 logger.info("DB Backup Started")
 databaseClass.dbBackup(conn, cursor, dbBackupPath)
-print(f"{currentTimestamp()} | DB Backup Ended")
 logger.info("DB Backup Ended")
 
-print(f"{currentTimestamp()} | Script Ended")
+deletedFiles = databaseClass.deleteOldBackups()
+print(deletedFiles)
+for file in deletedFiles:
+    logger.info(f"Deleted OLD backup file: {file}")
+
 logger.info("Script Ended")
 conn.commit()
 conn.close()
