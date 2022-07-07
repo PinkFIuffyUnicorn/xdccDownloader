@@ -46,8 +46,8 @@ for row in viewList:
         \rXdcc: {xdcc}
     """)
 
-    # decision = input(f"Would you like to retry download for xdcc {tableName} - s{season}e{episode}?")
-    decision = "y"
+    decision = input(f"Would you like to retry download for xdcc {tableName} - s{season}e{episode}?")
+    # decision = "y"
 
     if decision.lower() in ("y","yes","d"):
         animeNameDir = f"{parentDir}\{animeName}"
@@ -70,8 +70,8 @@ for row in viewList:
         packSearch.set_directory(animeSeasonDir)
         print(fileName, animeSeasonDir)
         print(botName, xdcc)
-        download_packs([packSearch])
-        print("A")
+        # download_packs([packSearch])
+        # print("A")
 
         cursor.execute(f"update {tableName} set downloaded = 1 where episode = {episode} and season = {season}")
         cursor.commit()

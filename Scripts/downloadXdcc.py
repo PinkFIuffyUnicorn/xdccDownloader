@@ -73,8 +73,8 @@ cursor.execute(
     " and download = 1"
     # " and id not in (52, 73)"
     # " and name <> 'Boku no Hero Academia'"
-    " and name = 'Death Parade'"
-    # " and name = 'Tomodachi Game'"
+    # " and name = 'Paripi Koumei'"
+    # " and name = 'Jashin Chan Dropkick S2'"
     # " where id = 54"
     # " where id in (71,72)"
     " order by name"
@@ -111,8 +111,12 @@ for row in downloadList:
             continue
         loopCounter = 0
         while True:
-            #if name == "One Piece" and episode == 983:
-                #break
+            # if episode > 24:
+            #     break
+            if episode == 15:
+                current_season = 2
+            elif episode == 27:
+                current_season = 3
             searchTerm = "{0} - {1} {2}p".format(name, "0" + str(episode) if len(str(episode)) == 1 else episode, quality) # Shiroi Suna no Aquatope - 05 1080p
             query = "query={0}".format(searchTerm)
             searchDriverUrl = "{0}{1}".format(driverUrl, query)
@@ -125,14 +129,20 @@ for row in downloadList:
             if 1==2:
                 break
             else:
-                buttons = driver.find_elements(By.XPATH, "//button[@data-botname='Ginpachi-Sensei']")
+                buttons = driver.find_elements(By.XPATH, "//button["
+                                                         "@data-botname='ARUTHA-BATCH|1080p' "
+                                                         # "and @data-botpack >= '16682' and @data-botpack <= '16693'"
+                                                         "]"
+                                               )
                 buttons = buttons if len(buttons) > 0 else driver.find_elements(By.XPATH, "//button["
-                                                                                          "@data-botname='CR-HOLLAND-IPv6|NEW' or "
-                                                                                          "@data-botname='CR-ARUTHA-IPv6|NEW' or "
-                                                                                          "@data-botname='CR-HOLLAND|NEW' or "
-                                                                                          "@data-botname='CR-ARUTHA|NEW' or "
-                                                                                          "@data-botname='ARUTHA-BATCH|1080p' or "
-                                                                                          "@data-botname='Fincayra']")
+                                                                                          "@data-botname='Ginpachi-Sensei' "
+                                                                                          "or @data-botname='CR-HOLLAND-IPv6|NEW' "
+                                                                                          "or @data-botname='CR-ARUTHA-IPv6|NEW' "
+                                                                                          "or @data-botname='CR-HOLLAND|NEW' "
+                                                                                          "or @data-botname='CR-ARUTHA|NEW' "
+                                                                                          "or @data-botname='Fincayra' "
+                                                                                          "or @data-botname='[FFF]Arutha']"
+                                                                                )
             logger.debug(f"Buttons: {buttons}")
             if len(buttons) == 0:
                 if loopCounter == 0:
@@ -246,7 +256,7 @@ if 1==1:
             packSearch.set_directory(animeSeasonDir)
             download_packs([packSearch])
             logger.debug("Download Successful")
-            cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 1, error is null, is_error = 0 where episode = {episode} and season = {x[4]}")
+            cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 1, error = null, is_error = 0 where episode = {episode} and season = {x[4]}")
             cursor.commit()
         except Exception as e:
             print(f"{currentTimestamp()} | Error Downloading File")
@@ -269,7 +279,6 @@ databaseClass.dbBackup(conn, cursor, dbBackupPath)
 logger.info("DB Backup Ended")
 
 deletedFiles = databaseClass.deleteOldBackups()
-print(deletedFiles)
 for file in deletedFiles:
     logger.info(f"Deleted OLD backup file: {file}")
 
