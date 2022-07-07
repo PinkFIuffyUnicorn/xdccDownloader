@@ -196,9 +196,13 @@ for row in downloadList:
                         , downloaded bit default 0
                         , error varchar(8000)
                         , is_error bit default 0
+                        , notification_sent bit default 0
                     )
                 """)
                 logger.debug(f"Added new Anime table ({dir_name.replace(' ', '_')})")
+                cursor.execute(
+                    "updateNotifications"
+                )
 
             cursor.execute(f"select count(*) from [{dir_name.replace(' ','_')}] where episode = {episode} and season = {current_season}")
             checkEpisodeExists = cursor.fetchall()[0][0]

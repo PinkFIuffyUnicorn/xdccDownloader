@@ -36,7 +36,8 @@ for row in viewList:
     downloaded = row[4]
     is_error = row[5]
     error = row[6]
-    tableName = row[7]
+    notification_sent = row[7]
+    tableName = row[8]
     botName = xdcc.split(" ")[1]
     animeName = tableName.replace("_", " ")
     print(f"""
