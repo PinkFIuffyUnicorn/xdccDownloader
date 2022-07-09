@@ -203,6 +203,9 @@ for row in downloadList:
                 cursor.execute(
                     "updateNotifications"
                 )
+                cursor.execute(
+                    "createXdccView"
+                )
 
             cursor.execute(f"select count(*) from [{dir_name.replace(' ','_')}] where episode = {episode} and season = {current_season}")
             checkEpisodeExists = cursor.fetchall()[0][0]
