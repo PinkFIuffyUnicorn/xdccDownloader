@@ -8,14 +8,16 @@ def addImagesToSeasons(directory, filesLocation):
             seasonName = fileName.split("_")[1]
             dirPath = u"\\".join((filesLocation, name, seasonName))
             dirExists = os.path.isdir(dirPath)
+            # print(dirExists, fileName, dirPath)
 
             if dirExists:
                 old_name = os.path.join(os.path.abspath(subdir), filenameJpg)
                 base, extension = os.path.splitext(name)
                 new_name = os.path.join(filesLocation, base, seasonName, seasonName.lower().replace(" ", "") + ".jpg")
                 fileExists = os.path.isfile(new_name)
+                # print(fileExists, old_name, new_name)
                 if not fileExists:
-                    # print(old_name, new_name)
+                    print(old_name, new_name)
                     shutil.copy(old_name, new_name)
 
 def addImagesToShows(directory):

@@ -1,3 +1,4 @@
+import fnmatch
 import sys
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -111,12 +112,6 @@ for row in downloadList:
             continue
         loopCounter = 0
         while True:
-            # if episode > 24:
-            #     break
-            if episode == 15:
-                current_season = 2
-            elif episode == 27:
-                current_season = 3
             searchTerm = "{0} - {1} {2}p".format(name, "0" + str(episode) if len(str(episode)) == 1 else episode, quality) # Shiroi Suna no Aquatope - 05 1080p
             query = "query={0}".format(searchTerm)
             searchDriverUrl = "{0}{1}".format(driverUrl, query)
@@ -127,20 +122,20 @@ for row in downloadList:
             # if name == "Toradora":
             #     buttons = driver.find_elements(By.XPATH, "//button[@data-botname='Ghouls|Arutha']")
             if 1==2:
-                break
+                pass
             else:
                 buttons = driver.find_elements(By.XPATH, "//button["
-                                                         "@data-botname='ARUTHA-BATCH|1080p' "
+                                                         "@data-botname='Ginpachi-Sensei' "
                                                          # "and @data-botpack >= '16682' and @data-botpack <= '16693'"
                                                          "]"
                                                )
                 buttons = buttons if len(buttons) > 0 else driver.find_elements(By.XPATH, "//button["
-                                                                                          "@data-botname='Ginpachi-Sensei' "
+                                                                                          "@data-botname='CR-ARUTHA-IPv6|NEW' "
                                                                                           "or @data-botname='CR-HOLLAND-IPv6|NEW' "
-                                                                                          "or @data-botname='CR-ARUTHA-IPv6|NEW' "
                                                                                           "or @data-botname='CR-HOLLAND|NEW' "
                                                                                           "or @data-botname='CR-ARUTHA|NEW' "
                                                                                           "or @data-botname='Fincayra' "
+                                                                                          "or @data-botname='ARUTHA-BATCH|1080p' "
                                                                                           "or @data-botname='[FFF]Arutha']"
                                                                                 )
             logger.debug(f"Buttons: {buttons}")
@@ -200,12 +195,12 @@ for row in downloadList:
                     )
                 """)
                 logger.debug(f"Added new Anime table ({dir_name.replace(' ', '_')})")
-                cursor.execute(
-                    "updateNotifications"
-                )
-                cursor.execute(
-                    "createXdccView"
-                )
+                # cursor.execute(
+                #     "updateNotifications"
+                # )
+                # cursor.execute(
+                #     "createXdccView"
+                # )
 
             cursor.execute(f"select count(*) from [{dir_name.replace(' ','_')}] where episode = {episode} and season = {current_season}")
             checkEpisodeExists = cursor.fetchall()[0][0]
@@ -249,7 +244,7 @@ if 1==1:
                 os.mkdir(animeNameDir)
             os.mkdir(animeSeasonDir)
         else:
-            seasonEpisode = len([f for f in os.listdir(animeSeasonDir)]) + 1
+            seasonEpisode = len(fnmatch.filter(os.listdir(animeSeasonDir), '*.mkv')) + 1
             seasonEpisode = "0" + str(seasonEpisode) if len(str(seasonEpisode)) == 1 else seasonEpisode
 
         fileName = f"{animeName} - s{current_season}e{seasonEpisode} (1080p) [{episode}].mkv"
