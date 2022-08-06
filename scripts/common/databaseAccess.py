@@ -32,7 +32,7 @@ class Database():
 
     def deleteOldBackups(self):
         deletedFiles = []
-        os.chdir("../DB Backups")
+        os.chdir("../../DB Backups")
         for file in glob.glob("*.bak"):
             fileExists = os.path.exists(file)
             if fileExists:

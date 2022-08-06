@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 # My Ignores
-./Scripts/config.ini
-./Scripts/test*
+scripts/config.ini
+scripts/test*

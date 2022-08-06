@@ -1,5 +1,5 @@
 import configparser
-from Scripts.databaseAccess import Database
+from scripts.common.databaseAccess import Database
 import sys
 import os
 

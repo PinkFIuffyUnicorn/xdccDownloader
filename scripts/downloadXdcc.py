@@ -10,9 +10,9 @@ from xdcc_dl.xdcc import download_packs
 from xdcc_dl.entities import XDCCPack, IrcServer
 import os
 import configparser
-from Scripts.databaseAccess import Database
-from Scripts.plexLibrary import PlexLibrary
-from Scripts.customLogger import Logger
+from scripts.common.databaseAccess import Database
+from scripts.common.plexLibrary import PlexLibrary
+from scripts.common.customLogger import Logger
 
 def currentTimestamp(type="print"):
     if type.lower() == "file":
@@ -90,7 +90,7 @@ driver = webdriver.Chrome(service=Service(
 )
 logger.debug("Driver Start")
 driver.get(driverUrl)
-
+sys.exit(0)
 for row in downloadList:
     id = int(row[0])
     name = row[1]
