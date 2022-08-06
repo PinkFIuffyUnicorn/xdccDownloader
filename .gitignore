@@ -131,3 +131,4 @@ dmypy.json
 # My Ignores
 scripts/config/config.ini
 scripts/testFiles*
+scripts/discordBot/image.png
