@@ -7,13 +7,14 @@ from scripts.common.databaseAccess import Database
 from scripts.common.customLogger import Logger
 from scripts.common.enumTypes import Types
 import urllib.request
+import pathlib
 
 def connectToDb(sqlServerName, database):
     try:
-        print("Connecting to DB...")
+        # print("Connecting to DB...")
         databaseClass = Database(sqlServerName, database)
         conn, cursor = databaseClass.dbConnect()
-        print("Connection successful")
+        # print("Connection successful")
         return conn, cursor
     except Exception as e:
         print("Connection unsuccessful")
@@ -118,8 +119,9 @@ async def addAnime(ctx):
         await ctx.send("Image Url:")
         imageUrl = await bot.wait_for("message", check=check(ctx.author))
         imageUrl = imageUrl.content
-        urllib.request.urlretrieve(imageUrl, fr"C:\Users\Nabernik\Desktop\GitHub\xdccDownloader\Images\{dirName}_Season {currentSeason}.png")
-        image = os.path.abspath(fr"C:\Users\Nabernik\Desktop\GitHub\xdccDownloader\Images\{dirName}_Season {currentSeason}.png")
+        dirPath = pathlib.Path(__file__).parent.parent.parent.resolve()
+        urllib.request.urlretrieve(imageUrl, fr"{dirPath}\Images\{dirName}_Season {currentSeason}.png")
+        image = os.path.abspath(fr"{dirPath}\Images\{dirName}_Season {currentSeason}.png")
         # print(name, dirName, englishName, currentSeason, episode, image)
         cursor.execute(f"""
             insert into anime_to_download (name, dir_name, english_name, current_season, episode, download, image)
@@ -204,6 +206,7 @@ async def myLoop():
                 from {tableName}
                 where
                     notification_sent = 0
+                    and downloaded = 1
             """)
         notificationsResult = cursor.fetchall()
 
@@ -252,6 +255,8 @@ async def myLoop():
 
 @bot.command(name="test")
 async def test(ctx):
-    print(ctx.message.author)
+    dirPath = pathlib.Path(__file__).parent.parent.parent.resolve()
+    image = os.path.abspath(fr"{dirPath}\Images\_Season.png")
+    print(dirPath, image)
 
 bot.run(TOKEN)
