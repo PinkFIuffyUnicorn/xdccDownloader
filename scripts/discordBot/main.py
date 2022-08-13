@@ -85,7 +85,7 @@ async def setLocations(ctx, channelName, type):
                 set channel_id = {channelId}, channel_name = '{channelName}'
                 where guild_id = {guildId} and type = '{type}'
             """)
-        print(guildId, guildName, channelId, channelName, type, recordExists)
+        # print(guildId, guildName, channelId, channelName, type, recordExists)
         cursor.commit()
         await ctx.send(f"Successfully updated location for: `{type}`")
 
@@ -171,7 +171,7 @@ async def displayAllErrors(ctx):
             episode = "0" + str(row2[1]) if len(str(row2[1])) == 1 else row2[1]
             xdcc = row2[2]
             error = row2[3]
-            image = row2[4]
+            # image = row2[4]
 
             embed = discord.Embed(
                 title="Download Error For Anime Episode"
@@ -214,7 +214,7 @@ async def myLoop():
             season = "0" + str(row2[2]) if len(str(row2[2])) == 1 else row2[2]
             episode = "0" + str(row2[3]) if len(str(row2[3])) == 1 else row2[3]
             animeName = tableName.replace("_", " ")
-            print(animeName)
+            # print(animeName)
 
             cursor.execute(f"""
                 select image From anime_to_download
@@ -251,7 +251,7 @@ async def myLoop():
                     cursor.commit()
     conn.commit()
     conn.close()
-    print("DB Connection Closed For Loop")
+    # print("DB Connection Closed For Loop")
 
 @bot.command(name="test")
 async def test(ctx):
