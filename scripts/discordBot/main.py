@@ -1,3 +1,4 @@
+import pprint
 import os
 import sys
 import discord
@@ -149,6 +150,14 @@ async def displayAllErrors(ctx):
         	it.TABLE_NAME in (select replace(dir_name,' ','_') from anime_to_download where download = 1)
         """)
     tablesList = cursor.fetchall()
+    tableCount = len(tablesList)
+
+    await ctx.send(f"There are: {tableCount} errors, do you want to display them all? (Y/N)")
+    userInput = await bot.wait_for("message", check=check(ctx.author))
+    userInput = userInput.content
+    if userInput.lower() != "y":
+        return
+
     for row in tablesList:
         tableName = row[0]
         animeName = tableName.replace("_", " ")
@@ -163,6 +172,7 @@ async def displayAllErrors(ctx):
                 from {tableName}
                 where
                     is_error = 1
+                    or episode between 8 and 10
             """)
         erorrResult = cursor.fetchall()
 
@@ -171,19 +181,17 @@ async def displayAllErrors(ctx):
             episode = "0" + str(row2[1]) if len(str(row2[1])) == 1 else row2[1]
             xdcc = row2[2]
             error = row2[3]
-            # image = row2[4]
 
             embed = discord.Embed(
                 title="Download Error For Anime Episode"
                 , description=f"**Anime:** {animeName}\n"
                               f"**Season:** {season}\n"
-                              f"**Episode:** {episode}"
-                              f"**Xdcc:** {xdcc}"
+                              f"**Episode:** {episode}\n"
+                              f"**Xdcc:** {xdcc}\n"
                               f"**Error:** {error}"
                 , color=discord.Color.dark_teal()
             )
             await ctx.send(embed=embed)
-
 
 @tasks.loop(seconds=600)
 async def myLoop():
