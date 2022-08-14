@@ -52,11 +52,11 @@ async def on_ready():
     myLoop.start()
     print(f"{bot.user} is online!")
 
-@bot.command(name="ping")
-async def ping(ctx):
-    await ctx.send("Pong!");
-
-@bot.command(name="setLocations")
+@bot.command(
+    name="setLocations"
+    , description="Set locations for notification updates"
+    , help="Set locations for notification updates"
+)
 async def setLocations(ctx, channelName, type):
     try:
         if not isAdminCheck(ctx):
@@ -95,7 +95,11 @@ async def setLocations(ctx, channelName, type):
     except Exception as e:
         await ctx.send(f"Error Occurred: `{e}`")
 
-@bot.command(name="addAnime")
+@bot.command(
+    name="addAnime"
+    , description="Add new anime to the download list"
+    , help="Add new anime to the download list"
+)
 async def addAnime(ctx):
     try:
         if not isAdminCheck(ctx):
@@ -136,7 +140,11 @@ async def addAnime(ctx):
     except Exception as e:
         await ctx.send(f"Error Occurred: `{e}`")
 
-@bot.command(name="displayAllErrors")
+@bot.command(
+    name="displayAllErrors"
+    , description="Display all errors that occured during download"
+    , help="Display all errors that occured during download"
+)
 async def displayAllErrors(ctx):
     if not isAdminCheck(ctx):
         await ctx.send("You don't have permissions for this command");
