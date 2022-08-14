@@ -172,7 +172,6 @@ async def displayAllErrors(ctx):
                 from {tableName}
                 where
                     is_error = 1
-                    or episode between 8 and 10
             """)
         erorrResult = cursor.fetchall()
 
