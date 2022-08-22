@@ -1,4 +1,6 @@
 import os, shutil
+from scripts.common.plexLibrary import PlexLibrary
+import configparser
 
 def addImagesToSeasons(directory, filesLocation):
     for subdir, dirs, files in os.walk(directory):
@@ -32,9 +34,21 @@ def addImagesToShows(directory):
                 # print(latestSeasonPoster, showPoster)
                 shutil.copy(latestSeasonPoster, showPoster)
 
+# Config File
+config = configparser.ConfigParser()
+config.read("../config/config.ini")
+# Plex Config
+plexCredentials = config["PlexCredentials"]
+username = plexCredentials["username"]
+password = plexCredentials["password"]
+serverName = plexCredentials["serverName"]
+
 directory = r"../Images/"
 filesLocation = r"F:\Anime"
 addImagesToSeasons(directory, filesLocation)
 
 directory = r"F:\Anime"
 addImagesToShows(directory)
+
+myPlexLibrary = PlexLibrary(username, password, serverName, "Anime")
+myPlexLibrary.updatePlexLibraryMetadate()

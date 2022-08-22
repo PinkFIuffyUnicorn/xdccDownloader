@@ -272,7 +272,7 @@ if 1==1:
         logger.info("Updating Plex Library")
         try:
             myPlexLibrary = PlexLibrary(username, password, serverName, "Anime")
-            myPlexLibrary.updatePlexLibrary()
+            myPlexLibrary.updatePlexLibraryData()
         except Exception as e:
             logger.error(f"Error Updating Plex Library: {formatError(e)}")
 
