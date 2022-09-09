@@ -26,7 +26,7 @@ def formatError(errorMsg):
 
 # Other Variables
 botPackList = []
-dbBackupPath = rf"C:\Users\Nabernik\Desktop\GitHub\xdccDownloader\DB Backups\masterBKP_{currentTimestamp('db')}.bak"
+dbBackupPath = rf"C:\Users\Aleš\Desktop\GitHub\xdccDownloader\DB Backups\animeBKP_{currentTimestamp('db')}.bak"
 logger = Logger().log()
 
 print(f"{currentTimestamp()} | Script Started")
@@ -244,7 +244,7 @@ if 1==1:
                 os.mkdir(animeNameDir)
             os.mkdir(animeSeasonDir)
         else:
-            seasonEpisode = len(fnmatch.filter(os.listdir(animeSeasonDir), '*.mkv')) + 1
+            seasonEpisode = len([x for x in fnmatch.filter(os.listdir(animeSeasonDir), "*.mkv") if "e00" not in x]) + 1
             seasonEpisode = "0" + str(seasonEpisode) if len(str(seasonEpisode)) == 1 else seasonEpisode
 
         fileName = f"{animeName} - s{current_season}e{seasonEpisode} (1080p) [{episode}].mkv"

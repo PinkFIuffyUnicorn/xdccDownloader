@@ -3,12 +3,15 @@ from xdcc_dl.xdcc import download_packs
 from xdcc_dl.entities import XDCCPack, IrcServer
 import os
 import configparser
+from scripts.common.databaseAccess import Database
 
-sqlServerName = "DESKTOP-V6UNK5R"
-database = "master"
 # Config File
 config = configparser.ConfigParser()
-config.read("config.ini")
+config.read("../config/config.ini")
+# Database Config
+databaseConfig = config["Database"]
+sqlServerName = databaseConfig["serverName"]
+database = databaseConfig["database"]
 # Driver Config
 driverConfig = config["Driver"]
 parentDir = driverConfig["parentDir"]
@@ -41,7 +44,7 @@ for row in tablesList:
             *
         from {tableName}
         where
-            is_error = 1
+            downloaded = 0 and notification_sent = 0
     """)
     errorResult = cursor.fetchall()
 
@@ -57,8 +60,8 @@ for row in tablesList:
         xdccPack = xdcc.rsplit("#", 1)[1]
         botName = xdcc.split(" ")[1]
 
-        decision = input(f"Would you like to retry download for xdcc {tableName} - s{season}e{episode}?")
-        # decision = "y"
+        # decision = input(f"Would you like to retry download for xdcc {tableName} - s{season}e{episode}?")
+        decision = "y"
 
         if decision.lower() in ("y","yes","d"):
             animeNameDir = f"{parentDir}\{animeName}"
@@ -81,7 +84,7 @@ for row in tablesList:
             packSearch.set_directory(animeSeasonDir)
             # print(fileName, animeSeasonDir)
             # print(botName, xdcc)
-            # download_packs([packSearch])
+            download_packs([packSearch])
 
             cursor.execute(f"update {tableName} set downloaded = 1, is_error = 0, error = null where episode = {episode} and season = {season}")
             cursor.commit()
