@@ -42,7 +42,7 @@ for row in tablesList:
     cursor.execute(f"""
         select 
             *
-        from {tableName}
+        from [{tableName}]
         where
             downloaded = 0 and notification_sent = 0
     """)
@@ -60,8 +60,8 @@ for row in tablesList:
         xdccPack = xdcc.rsplit("#", 1)[1]
         botName = xdcc.split(" ")[1]
 
-        # decision = input(f"Would you like to retry download for xdcc {tableName} - s{season}e{episode}?")
-        decision = "y"
+        decision = input(f"Would you like to retry download for xdcc {tableName} - s{season}e{episode}?")
+        # decision = "y"
 
         if decision.lower() in ("y","yes","d"):
             animeNameDir = f"{parentDir}\{animeName}"

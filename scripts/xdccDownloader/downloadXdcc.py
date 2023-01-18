@@ -27,6 +27,7 @@ def formatError(errorMsg):
 # Other Variables
 botPackList = []
 dbBackupPath = rf"C:\Users\Aleš\Desktop\GitHub\xdccDownloader\DB Backups\animeBKP_{currentTimestamp('db')}.bak"
+downloadFiles = True
 logger = Logger().log()
 
 print(f"{currentTimestamp()} | Script Started")
@@ -60,8 +61,8 @@ except Exception as e:
     sys.exit(1)
 
 cursor.execute(
-    "select "
-    "id as '0'"
+    "select"
+    " id as '0'"
     ", name as '1'"
     ", episode as '2'"
     ", quality as '3'"
@@ -69,12 +70,14 @@ cursor.execute(
     ", days_without_episode as '5'"
     ", current_season as '6'"
     ", dir_name as '7'"
+    ", english_name as '8'"
     " from anime_to_download"
     " where 1 = 1"
     " and download = 1"
+    # " and id < 145"
     # " and id not in (52, 73)"
-    # " and name <> 'Boku no Hero Academia'"
-    # " and name = 'Paripi Koumei'"
+    # " and name <> 'Bungo Stray Dogs'"
+    # " and name = 'Bleach'"
     # " and name = 'Jashin Chan Dropkick S2'"
     # " where id = 54"
     # " where id in (71,72)"
@@ -100,6 +103,7 @@ for row in downloadList:
     days_without_episode = int(row[5])
     current_season = int(row[6])
     dir_name = row[7]
+    english_name = row[8]
 
     if not done:
         if days_without_episode > 30:
@@ -112,16 +116,21 @@ for row in downloadList:
             continue
         loopCounter = 0
         while True:
+            if episode == 367 and name == "Bleach":
+                break
             searchTerm = "{0} - {1} {2}p".format(name, "0" + str(episode) if len(str(episode)) == 1 else episode, quality) # Shiroi Suna no Aquatope - 05 1080p
+            if name == "Bungo Stray Dogs":
+                # searchTerm = "{0}p {1} - {2} [".format(quality, name, str(episode).zfill(3))  #  1080p Bleach - 001 [ (Bleach)
+                if episode in (13, 26, 38):
+                    current_season += 1
             query = "query={0}".format(searchTerm)
             searchDriverUrl = "{0}{1}".format(driverUrl, query)
             logger.debug(f"searchTerm: {searchTerm}")
             logger.debug(f"query: {query}")
             logger.debug(f"searchDriverUrl: {searchDriverUrl}")
             driver.get(searchDriverUrl)
-            # if name == "Toradora":
-            #     buttons = driver.find_elements(By.XPATH, "//button[@data-botname='Ghouls|Arutha']")
-            if 1==2:
+            if name == "placeholder":
+                # buttons = driver.find_elements(By.XPATH, f"//td[contains(text(),'{searchTerm.replace('1080p', '')}')]/../td/button")
                 pass
             else:
                 buttons = driver.find_elements(By.XPATH, "//button["
@@ -136,7 +145,8 @@ for row in downloadList:
                                                                                           "or @data-botname='CR-ARUTHA|NEW' "
                                                                                           "or @data-botname='Fincayra' "
                                                                                           "or @data-botname='ARUTHA-BATCH|1080p' "
-                                                                                          "or @data-botname='[FFF]Arutha']"
+                                                                                          "or @data-botname='[FFF]Arutha' "
+                                                                                          "or @data-botname='Ghouls|Arutha']"
                                                                                 )
             logger.debug(f"Buttons: {buttons}")
             if len(buttons) == 0:
@@ -170,11 +180,13 @@ for row in downloadList:
 
             print(f"""
                         \rName: {name}
+                        \rEnglish Name: {english_name}
                         \rDir Name: {dir_name}
                         \rEpisode: {episode}
                         \rXdcc: {xdcc}
             """)
             logger.info(f"Name: {name}")
+            logger.info(f"English Name: {english_name}")
             logger.info(f"Dir Name: {dir_name}")
             logger.info(f"Episode: {episode}")
             logger.info(f"Xdcc: {xdcc}")
@@ -222,8 +234,7 @@ for row in downloadList:
 
 driver.quit()
 logger.debug("Driver Quit")
-
-if 1==1:
+if downloadFiles:
     downloadCounter = 0
     for x in botPackList:
         downloadCounter+=1
@@ -258,12 +269,12 @@ if 1==1:
             packSearch.set_directory(animeSeasonDir)
             download_packs([packSearch])
             logger.debug("Download Successful")
-            cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 1, error = null, is_error = 0 where episode = {episode} and season = {x[4]}")
+            cursor.execute(f"update [{animeName.replace(' ', '_')}] set downloaded = 1, error = null, is_error = 0 where episode = {episode} and season = {x[4]}")
             cursor.commit()
         except Exception as e:
             print(f"{currentTimestamp()} | Error Downloading File")
             logger.error("Error Downloading File")
-            cursor.execute(f"update {animeName.replace(' ', '_')} set downloaded = 0, is_error = 1, error = '{formatError(e)}' where episode = {episode} and season = {x[4]}")
+            cursor.execute(f"update [{animeName.replace(' ', '_')}] set downloaded = 0, is_error = 1, error = '{formatError(e)}' where episode = {episode} and season = {x[4]}")
             cursor.commit()
             continue
 

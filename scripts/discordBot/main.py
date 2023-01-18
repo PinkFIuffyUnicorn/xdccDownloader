@@ -49,7 +49,7 @@ bot = commands.Bot(command_prefix="!")
 
 @bot.event
 async def on_ready():
-    myLoop.start()
+    # myLoop.start()
     print(f"{bot.user} is online!")
 
 @bot.command(
@@ -60,7 +60,7 @@ async def on_ready():
 async def setLocations(ctx, channelName, type):
     try:
         if not isAdminCheck(ctx):
-            await ctx.send("You don't have permissions for this command");
+            await ctx.send("You don't have permissions for this command")
             return
         conn, cursor = connectToDb(sqlServerName, database)
         type = Types(type).name
@@ -103,7 +103,7 @@ async def setLocations(ctx, channelName, type):
 async def addAnime(ctx):
     try:
         if not isAdminCheck(ctx):
-            await ctx.send("You don't have permissions for this command");
+            await ctx.send("You don't have permissions for this command")
             return
         conn, cursor = connectToDb(sqlServerName, database)
         await ctx.send("Anime Name:")
@@ -130,7 +130,7 @@ async def addAnime(ctx):
         # print(name, dirName, englishName, currentSeason, episode, image)
         cursor.execute(f"""
             insert into anime_to_download (name, dir_name, english_name, current_season, episode, download, image)
-            values ('{name}','{dirName}','{englishName}',{currentSeason},{episode},1,(SELECT * FROM OPENROWSET(BULK N'{image}', SINGLE_BLOB) as T1))
+            values ('{name}','{dirName}','{englishName.replace("'","''")}',{currentSeason},{episode},1,(SELECT * FROM OPENROWSET(BULK N'{image}', SINGLE_BLOB) as T1))
         """)
         cursor.commit()
         await ctx.send(f"Successfully Added Anime: `{name}`")
@@ -147,7 +147,7 @@ async def addAnime(ctx):
 )
 async def displayAllErrors(ctx):
     if not isAdminCheck(ctx):
-        await ctx.send("You don't have permissions for this command");
+        await ctx.send("You don't have permissions for this command")
         return
     conn, cursor = connectToDb(sqlServerName, database)
     cursor.execute("""
@@ -283,7 +283,7 @@ async def myLoop():
                     cursor.commit()
     conn.commit()
     conn.close()
-    # print("DB Connection Closed For Loop")
+    print("DB Connection Closed For Loop")
 
 @bot.command(name="test")
 async def test(ctx):
