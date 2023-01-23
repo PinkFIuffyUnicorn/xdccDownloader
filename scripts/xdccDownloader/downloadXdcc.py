@@ -24,7 +24,7 @@ def currentTimestamp(type="print"):
 def formatError(errorMsg):
     return str(errorMsg).replace("'","''")
 
-def mainFunc(printOutput=False):
+def mainFunc(printOutput=False, downloadAnimeName=None, downloadCurrentDay=False):
     try:
         # Other Variables
         botPackList = []
@@ -67,29 +67,28 @@ def mainFunc(printOutput=False):
             return [2, f"Db Exception occured: {formatError(e)}"]
             # sys.exit(1)
 
-        cursor.execute(
-            "select"
-            " id as '0'"
-            ", name as '1'"
-            ", episode as '2'"
-            ", quality as '3'"
-            ", done as '4'"
-            ", days_without_episode as '5'"
-            ", current_season as '6'"
-            ", dir_name as '7'"
-            ", english_name as '8'"
-            " from anime_to_download"
-            " where 1 = 1"
-            " and download = 1"
-            # " and id < 145"
-            # " and id not in (52, 73)"
-            # " and name <> 'Bungo Stray Dogs'"
-            # " and name = 'Bleach'"
-            # " and name = 'Jashin Chan Dropkick S2'"
-            # " where id = 54"
-            # " where id in (71,72)"
-            " order by name"
-        )
+        downloadAnimeName = f" and name = '{downloadAnimeName}'" if downloadAnimeName != None and downloadAnimeName != "" else " "
+        currentDayDownload = f" and download_day = {datetime.now().weekday() + 1}" if downloadCurrentDay == True else " "
+        sql = f"""
+            select
+                 id as '0'
+                , name as '1'
+                , episode as '2'
+                , quality as '3'
+                , done as '4'
+                , days_without_episode as '5'
+                , current_season as '6'
+                , dir_name as '7'
+                , english_name as '8'
+            from
+                anime_to_download
+            where 1 = 1
+            and download = 1
+            {downloadAnimeName}
+            {currentDayDownload}
+             order by name
+        """
+        cursor.execute(sql)
         downloadList = cursor.fetchall()
 
         options = Options()
@@ -309,9 +308,16 @@ def mainFunc(printOutput=False):
         conn.commit()
         conn.close()
     except Exception as e:
+        if printOutput:
+            print(e)
         return [0, f"Error: {formatError(e)}"]
 
-    return [1, f"Download Finished for {} anime"]
+    return [1, f"Download Finished for {downloadCounter} anime"]
 
 if __name__ == "__main__":
-    mainFunc(True)
+    """ ALL """
+    # mainFunc(printOutput=True)
+    """ ONLY ONE """
+    # mainFunc(printOutput=True, downloadAnimeName="Hyouken no Majutsushi ga Sekai wo Suberu")
+    """ ONLY TODAY """
+    mainFunc(printOutput=True, downloadCurrentDay=True)

@@ -1,3 +1,4 @@
+import math
 import pprint
 import os
 import sys
@@ -7,8 +8,20 @@ import configparser
 from scripts.common.databaseAccess import Database
 from scripts.common.customLogger import Logger
 from scripts.common.enumTypes import Types
+from scripts.xdccDownloader.downloadXdcc import mainFunc
+from scripts.common.plexLibrary import PlexLibrary
 import urllib.request
 import pathlib
+import configparser
+
+# Config File
+config = configparser.ConfigParser()
+config.read("../config/config.ini")
+# Plex Config
+plexCredentials = config["PlexCredentials"]
+username = plexCredentials["username"]
+password = plexCredentials["password"]
+serverName = plexCredentials["serverName"]
 
 def connectToDb(sqlServerName, database):
     try:
@@ -106,22 +119,25 @@ async def addAnime(ctx):
             await ctx.send("You don't have permissions for this command")
             return
         conn, cursor = connectToDb(sqlServerName, database)
-        await ctx.send("Anime Name:")
+        await ctx.send("**Anime Name**")
         name = await bot.wait_for("message", check=check(ctx.author))
         name = name.content
-        await ctx.send("Dir Name:")
+        await ctx.send("**Dir Name**")
         dirName = await bot.wait_for("message", check=check(ctx.author))
         dirName = dirName.content
-        await ctx.send("English Name:")
+        await ctx.send("**English Name**")
         englishName = await bot.wait_for("message", check=check(ctx.author))
         englishName = englishName.content
-        await ctx.send("Current Season:")
+        await ctx.send("**Current Season**")
         currentSeason = await bot.wait_for("message", check=check(ctx.author))
         currentSeason = currentSeason.content
-        await ctx.send("Episode:")
+        await ctx.send("**Episode**")
         episode = await bot.wait_for("message", check=check(ctx.author))
         episode = episode.content
-        await ctx.send("Image Url:")
+        await ctx.send("**Download Day**```0 - Monday, 1 - Tuesday, 2 - Wednesday, 3 - Thursday, 4 - Friday, 5 - Saturday, 6 - Sunday```")
+        downloadDay = await bot.wait_for("message", check=check(ctx.author))
+        downloadDay = downloadDay.content
+        await ctx.send("**Image Url**")
         imageUrl = await bot.wait_for("message", check=check(ctx.author))
         imageUrl = imageUrl.content
         dirPath = pathlib.Path(__file__).parent.parent.parent.resolve()
@@ -129,8 +145,8 @@ async def addAnime(ctx):
         image = os.path.abspath(fr"{dirPath}\Images\{dirName}_Season {currentSeason}.png")
         # print(name, dirName, englishName, currentSeason, episode, image)
         cursor.execute(f"""
-            insert into anime_to_download (name, dir_name, english_name, current_season, episode, download, image)
-            values ('{name}','{dirName}','{englishName.replace("'","''")}',{currentSeason},{episode},1,(SELECT * FROM OPENROWSET(BULK N'{image}', SINGLE_BLOB) as T1))
+            insert into anime_to_download (name, dir_name, english_name, current_season, episode, download, image, download_day)
+            values ('{name}','{dirName}','{englishName.replace("'","''")}',{currentSeason},{episode},1,(SELECT * FROM OPENROWSET(BULK N'{image}', SINGLE_BLOB) as T1),(select id from days where day_id = {downloadDay}))
         """)
         cursor.commit()
         await ctx.send(f"Successfully Added Anime: `{name}`")
@@ -285,10 +301,81 @@ async def myLoop():
     conn.close()
     print("DB Connection Closed For Loop")
 
+@bot.command(name="updateAnimePlexLibrary")
+async def updateAnimePlexLibrary(ctx):
+    myPlexLibrary = PlexLibrary(username, password, serverName, "Anime")
+    myPlexLibrary.updatePlexLibraryData()
+    print("Anime Library Updated Successfully!")
+    await ctx.send("Anime Library Updated Successfully!")
+
+@bot.command(name="updateAnimeDownloads")
+async def updateAnimeDownloads(ctx, *args):
+    animeName = ""
+    if len(args) > 1:
+        await ctx.send('Incorrect syntax, usage: ```!updateAnimeDownloads``` or ```!updateAnimeDownloads "anime name"```')
+        return False
+    elif len(args) == 1:
+        animeName = args[0]
+    await ctx.send("Download Started")
+    updateAnimeList = mainFunc(downloadAnimeName=animeName, printOutput=False)
+    returnCode = updateAnimeList[0]
+    returnMsg = updateAnimeList[1]
+    print(returnMsg if returnCode == 1 else f"Error Occured in downloading Anime")
+    await ctx.send(returnMsg if returnCode == 1 else f"Error Occured in downloading Anime" + f": ```{animeName}```" if animeName != "" else "")
+
+@bot.command(name="listAllAnimeToDownload")
+async def listAllAnimeToDownload(ctx):
+    conn, cursor = connectToDb(sqlServerName, database)
+    cursor.execute("""
+            select name, episode, current_season
+            from anime_to_download
+            where download = 1
+            order by name
+        """)
+    allAnimeToDownloadList = cursor.fetchall()
+
+    embed = discord.Embed()
+    current_page = 0
+    all_pages = math.ceil(len(allAnimeToDownloadList) / 7)
+    new_page = False
+
+    for index, row in enumerate(allAnimeToDownloadList):
+        if current_page != math.ceil((index + 1) / 7):
+            current_page = math.ceil((index + 1) / 7)
+            new_page = True
+            if index != 0:
+                await ctx.send(embed=embed)
+                next_page = await bot.wait_for("message", check=check(ctx.author))
+                next_page = next_page.content
+                if next_page.lower() != "next":
+                    break
+        if new_page:
+            new_page = False
+            embed = discord.Embed(
+                title="Added Anime Episode (Type 'next' for next page)"
+                , color=discord.Color.dark_teal()
+            )
+            embed.add_field(name="Anime Name", value="", inline=True)
+            embed.add_field(name="Current Season", value="", inline=True)
+            embed.add_field(name="Current Episode", value="", inline=True)
+            embed.set_footer(text=f"Page {current_page}/{all_pages}")
+        name = row[0]
+        episode = row[1]
+        current_season = row[2]
+
+        embed.add_field(name="", value=name, inline=True)
+        embed.add_field(name="", value=current_season, inline=True)
+        embed.add_field(name="", value=episode, inline=True)
+
+        if (index + 1) == len(allAnimeToDownloadList):
+            await ctx.send(embed=embed)
+
+    cursor.commit()
+    conn.commit()
+    conn.close()
+
 @bot.command(name="test")
 async def test(ctx):
-    dirPath = pathlib.Path(__file__).parent.parent.parent.resolve()
-    image = os.path.abspath(fr"{dirPath}\Images\_Season.png")
-    print(dirPath, image)
+    await ctx.send("**Download Day** ```0 - Monday, 1 - Tuesday, 2 - Wednesday, 3 - Thursday, 4 - Friday, 5 - Saturday, 6 - Sunday```")
 
 bot.run(TOKEN)
