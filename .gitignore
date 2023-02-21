@@ -130,5 +130,6 @@ dmypy.json
 
 # My Ignores
 scripts/config/config.ini
+scripts/config/ChromeProfile*
 scripts/testFiles*
 scripts/discordBot/image*
