@@ -2,6 +2,7 @@ import os
 from xdcc_dl.xdcc import download_packs
 from xdcc_dl.entities import XDCCPack, IrcServer
 import configparser
+from scripts.common.databaseAccess import Database
 
 # Config File
 config = configparser.ConfigParser()
@@ -9,6 +10,10 @@ config.read("../config/config.ini")
 # Root Dir
 driverConfig = config["Driver"]
 rootDir = driverConfig["parentDir"]
+# Database Config
+databaseConfig = config["Database"]
+sqlServerName = databaseConfig["serverName"]
+database = databaseConfig["database"]
 
 def searchForEpisodeNumberErrors(directory):
     dirsToIgnore = ["100 man no Inochi no Ue ni Ore wa Tatte Iru", "Bleach", "Boku no Hero Academia", "Eighty Six", "Honzuki no Gekokujou", "Kimetsu no Yaiba", "Kyokou Suiri", "Mushoku Tensei", "One Piece", "Shingeki no Kyojin", "Spy x Family"
@@ -45,6 +50,34 @@ def xdccDownload(server, botName, xdccPack):
     packSearch = XDCCPack(IrcServer(server), botName, xdccPack)
     download_packs([packSearch])
 
+def updateNotificationsView():
+    databaseClass = Database(sqlServerName, database)
+    conn, cursor = databaseClass.dbConnect()
+    tablesSql = """
+        select it.table_name
+        from INFORMATION_SCHEMA.TABLES as it
+        inner join sys.tables as t on t.name = it.TABLE_NAME
+        where
+        it.TABLE_NAME in (select replace(dir_name,' ','_') from anime_to_download where download = 1)
+    """
+    cursor.execute(tablesSql)
+    tablesList = cursor.fetchall()
+
+    for row in tablesList:
+        tableName = row[0]
+        animeName = tableName.replace("_", " ")
+        updateNotificationsSql = f"""
+            update [{tableName}]
+            set notification_sent = 1
+            where notification_sent = 0
+        """
+        cursor.execute(updateNotificationsSql)
+        cursor.commit()
+    conn.commit()
+    conn.close()
+
 # renameFiles(r"F:\Anime\Great Teacher Onizuka\Season 1", "1", "Great Teacher Onizuka", True)
 
-searchForEpisodeNumberErrors(rootDir)
+updateNotificationsView()
+
+# searchForEpisodeNumberErrors(rootDir)

@@ -41,7 +41,7 @@ for row in tablesList:
 
     cursor.execute(f"""
         select 
-            *
+            *, (select top 1 image from anime_to_download where dir_name = '{tableName.replace("_", " ")}' order by last_change_date desc)
         from [{tableName}]
         where
             downloaded = 0 and notification_sent = 0
@@ -61,7 +61,8 @@ for row in tablesList:
         botName = xdcc.split(" ")[1]
 
         decision = input(f"Would you like to retry download for xdcc {tableName} - s{season}e{episode}?")
-        # decision = "y"
+        # decision = "n"
+        # print(animeName)
 
         if decision.lower() in ("y","yes","d"):
             animeNameDir = f"{parentDir}\{animeName}"
@@ -79,7 +80,14 @@ for row in tablesList:
 
             fileName = f"{animeName} - s{season}e{seasonEpisode} (1080p) [{episode}].mkv"
 
-            packSearch = XDCCPack(IrcServer("irc.rizon.net"), botName, xdccPack)
+            anime_details_dict = {
+                "anime_name": animeName,
+                "episode": episode,
+                "current_season": season,
+                "image": bytes(row2[8])
+            }
+
+            packSearch = XDCCPack(IrcServer("irc.rizon.net"), botName, xdccPack, anime_details_dict)
             packSearch.set_filename(fileName)
             packSearch.set_directory(animeSeasonDir)
             # print(fileName, animeSeasonDir)
