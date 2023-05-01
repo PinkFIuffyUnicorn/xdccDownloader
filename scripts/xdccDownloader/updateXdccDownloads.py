@@ -4,13 +4,14 @@ from xdcc_dl.entities import XDCCPack, IrcServer
 import os
 import configparser
 from scripts.common.databaseAccess import Database
+from scripts.discordBot.extensions.commonFunctions import getDiscordGuildChannelLocations, sendInitialEmbed
 
 # Config File
 config = configparser.ConfigParser()
 config.read("../config/config.ini")
 # Database Config
 databaseConfig = config["Database"]
-sqlServerName = databaseConfig["serverName"]
+sqlServerName = databaseConfig["sqlServerName"]
 database = databaseConfig["database"]
 # Driver Config
 driverConfig = config["Driver"]
@@ -41,7 +42,7 @@ for row in tablesList:
 
     cursor.execute(f"""
         select 
-            *, (select top 1 image from anime_to_download where dir_name = '{tableName.replace("_", " ")}' order by last_change_date desc)
+            *, (select top 1 live_chart_image_url from anime_to_download where dir_name = '{tableName.replace("_", " ")}' order by last_change_date desc)
         from [{tableName}]
         where
             downloaded = 0 and notification_sent = 0
@@ -56,13 +57,14 @@ for row in tablesList:
         season = "0" + str(row2[2]) if len(str(row2[2])) == 1 else row2[2]
         # episode = row[3]
         episode = "0" + str(row2[3]) if len(str(row2[3])) == 1 else row2[3]
+        image = row2[8]
         animeName = tableName.replace("_", " ")
         xdccPack = xdcc.rsplit("#", 1)[1]
         botName = xdcc.split(" ")[1]
 
-        decision = input(f"Would you like to retry download for xdcc {tableName} - s{season}e{episode}?")
-        # decision = "n"
-        # print(animeName)
+        # decision = input(f"Would you like to retry download for xdcc {tableName} - s{season}e{episode}?")
+        decision = "n"
+        print(animeName, season, episode, xdcc)
 
         if decision.lower() in ("y","yes","d"):
             animeNameDir = f"{parentDir}\{animeName}"
@@ -80,11 +82,17 @@ for row in tablesList:
 
             fileName = f"{animeName} - s{season}e{seasonEpisode} (1080p) [{episode}].mkv"
 
+            # ["", "", "name", "episode", "season", "image"]
+
+            discord_urls = sendInitialEmbed([["", "", animeName, episode, season, image]])
+
             anime_details_dict = {
                 "anime_name": animeName,
                 "episode": episode,
                 "current_season": season,
-                "image": bytes(row2[8])
+                "live_chart_image_url": image,
+                "channel_ids": getDiscordGuildChannelLocations(),
+                "discord_urls": discord_urls
             }
 
             packSearch = XDCCPack(IrcServer("irc.rizon.net"), botName, xdccPack, anime_details_dict)
