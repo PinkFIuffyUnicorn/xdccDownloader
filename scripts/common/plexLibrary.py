@@ -14,15 +14,21 @@ class PlexLibrary:
         self.password = password
         self.server_name = server_name
         self.library_name = library_name
+        self.account = MyPlexAccount(self.username, self.password)
+        self.plex = self.account.resource(self.server_name).connect()
+        self.anime_library = self.plex.library.section(self.library_name)
 
     def updatePlexLibraryData(self):
-        account = MyPlexAccount(self.username, self.password)
-        plex = account.resource(self.server_name).connect()
-        anime_library = plex.library.section(self.library_name)
-        anime_library.update()
+        # account = MyPlexAccount(self.username, self.password)
+        # plex = account.resource(self.server_name).connect()
+        # anime_library = self.plex.library.section(self.library_name)
+        self.anime_library.update()
 
     def updatePlexLibraryMetadate(self):
-        account = MyPlexAccount(self.username, self.password)
-        plex = account.resource(self.server_name).connect()
-        anime_library = plex.library.section(self.library_name)
-        anime_library.refresh()
+        # account = MyPlexAccount(self.username, self.password)
+        # plex = account.resource(self.server_name).connect()
+        # anime_library = self.plex.library.section(self.library_name)
+        self.anime_library.refresh()
+
+    # def getShow(self, name: str):
+    #     return self.anime_library.get(name)

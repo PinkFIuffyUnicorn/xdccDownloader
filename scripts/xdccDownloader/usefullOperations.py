@@ -11,6 +11,7 @@ from xdcc_dl.xdcc import download_packs
 from xdcc_dl.entities import XDCCPack, IrcServer
 import configparser
 from scripts.common.databaseAccess import Database
+from scripts.common.plexLibrary import PlexLibrary
 
 # Config File
 config = configparser.ConfigParser()
@@ -31,27 +32,45 @@ def searchForEpisodeNumberErrors(directory):
             if filename.endswith(".mkv"):
                 try:
                     dirEpisode = filename.split("[")[1].split("]")[0]
-                    webEpisode = filename.split("- s")[1].split("e")[1].split(" ")[0]
+                    webEpisode = filename.split("- ")[1].split(" ")[0]
                 except:
                     print("AAAA", filename)
                 if dirEpisode != webEpisode:
-                    print(filename)
+                    new_filename = filename.replace(f"- {webEpisode}", f"- {dirEpisode}")
+                    old_file_path = u"\\".join((subdir, filename))
+                    new_file_path = u"\\".join((subdir, new_filename))
+                    print(old_file_path, " | ", new_file_path)
+                    os.rename(old_file_path, new_file_path)
 
-def renameFiles(directory, season, animeName, rename=False):
+def renameFiles(directory, rename=False, print_errors=False):
+    pattern = r"s\d+e\d+"
+    errorList = []
     for subdir, dirs, files in os.walk(directory):
         for filename in files:
             if filename.endswith(".mkv"):
-                # episode = filename.split('S01E')[1].split('.')[0]
-                episode = filename.split('- E')[1].split(' ')[0]
-                # episode = filename.split('- ')[1].split(' ')[0]
-                season = f"0{season}" if len(season) == 1 else season
-                oldPath = os.path.join(directory, filename)
-                newPath = os.path.join(directory, f"{animeName} - s{season}e{episode} (1080p) [{episode}].mkv")
-                # print(oldPath)
-                # print(newPath)
-                if rename:
-                    # os.rename(oldPath, newPath)
-                    print(oldPath, newPath)
+                matches = re.findall(pattern, filename)
+                if matches:
+                    anime_name = filename.split(" - s")[0]
+                    end_file_name = filename.split("- s")[1].split(" ", 1)[1]
+                    season = filename.split("- s")[1].split("e")[0]
+                    episode = filename.split("- s")[1].split(" ")[0].split("e")[1]
+                    new_filename = f"{anime_name} - {episode} {end_file_name}"
+                    old_file_path = u"\\".join((subdir, filename))
+                    new_file_path = u"\\".join((subdir, new_filename))
+                    print(old_file_path, " | ", new_file_path)
+                    # if os.path.isfile(old_file_path) and rename:
+                    #     os.rename(old_file_path, new_file_path)
+                    # print(filename, " | ", new_filename)
+                    # if rename:
+                    #     os.rename()
+                else:
+                    errorList.append(filename)
+    if print_errors:
+        print("************************************* ERRORS *************************************")
+        errorString = u"\n".join((errorList))
+        print(errorString)
+        print("************************************* ERRORS *************************************")
+
 
 def xdccDownload(server, botName, xdccPack):
     # irc.rizon.net
@@ -99,7 +118,6 @@ def update_live_chart_image_urls():
             from anime_to_download
             where
                 live_chart_url is not null
-            and live_chart_image_url is null
             order by name
         """
     cursor.execute(live_chart_sql)
@@ -112,7 +130,8 @@ def update_live_chart_image_urls():
         sleep(2)
         image = driver.find_elements(By.XPATH, "//div[@class='anime-poster']/img")
         try:
-            image_url = image[0].get_attribute("src")
+            # image_url = image[0].get_attribute("src")
+            image_url = image[0].get_attribute("srcset").split(",")[1].strip().split(" ")[0]
             update_image_url_sql = f"""
                 update anime_to_download
                 set live_chart_image_url = '{image_url}'
@@ -208,15 +227,54 @@ def find_missing_images(directory):
         #     image_name = f"{current_dir.replace(' ', '').lower()}.jpg"
         #     # print(current_dir, image_name in files)
 
-def get_missing_seasons():
+def find_missing_images(directory):
+    for subdir, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".jpg"):
+                file_path = u"\\".join((subdir, file))
+                print(file_path)
+                # os.remove(file_path)
 
+def getAllServerAnime(directory):
+    anime_list = []
+    for subdir, dirs, files in os.walk(directory):
+        subdir_split = subdir.split("\\")
+        # print(subdir_split)
+        if len(subdir_split) != 3:
+            continue
+        anime_list.append(subdir_split[2])
+    return anime_list
 
+def getMissingAnimeInDb(directory):
+    databaseClass = Database(sqlServerName, database)
+    conn, cursor = databaseClass.dbConnect()
 
-# renameFiles(r"F:\Anime\Great Teacher Onizuka\Season 1", "1", "Great Teacher Onizuka", True)
-# renameFiles("F:\Anime")
-# updateNotificationsView()3
-# searchForEpisodeNumberErrors(rootDir)
+    anime_list = getAllServerAnime(directory)
+    for anime in anime_list:
+        sql = f"""
+                select count(*)
+                from anime_to_download
+                where
+                    dir_name = '{anime}'
+                and id = (select max(atd.id) from anime_to_download atd where atd.dir_name = anime_to_download.dir_name)
+            """
+        cursor.execute(sql)
+        counter = cursor.fetchall()[0][0]
+        if counter == 0:
+            print(anime, counter)
+
+    cursor.commit()
+    conn.commit()
+    conn.close()
+
+# renameFiles(directory, old_format, new_format, rename=False, print_errors=False):
+# renameFiles("A:\Anime\Summertime Render", False, True)
+# updateNotificationsView()
+searchForEpisodeNumberErrors("A:\Anime\Summer Time Render")
 # update_live_chart_image_urls()
 # get_missing_episodes(rootDir + "\Kami-tachi ni Hirowareta Otoko")
 # get_missing_episodes(rootDir)
 # find_missing_images(rootDir)
+# find_missing_images("A:\Anime")
+# print(getAllServerAnime("A:\Anime"))
+# getMissingAnimeInDb("A:\Anime")

@@ -21,7 +21,9 @@ driverNiblUrl = driverConfig["driverNiblUrl"]
 parentDir = driverConfig["parentDir"]
 # Discord Bot
 discordBotConfig = config["DiscordBot"]
-token = discordBotConfig["token"]
+tokenIgor = discordBotConfig["tokenIgor"]
+tokenSana = discordBotConfig["tokenSana"]
+token = "ASD"
 # SubsPlease
 subsPleaseConfig = config["SubsPleaseRSSFeed"]
 url1080 = subsPleaseConfig["url1080"]

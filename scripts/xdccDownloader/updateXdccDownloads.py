@@ -3,7 +3,6 @@ from xdcc_dl.xdcc import download_packs
 from xdcc_dl.entities import XDCCPack, IrcServer
 import os
 import configparser
-from scripts.common.databaseAccess import Database
 from scripts.discordBot.extensions.commonFunctions import getDiscordGuildChannelLocations, sendInitialEmbed
 
 # Config File
