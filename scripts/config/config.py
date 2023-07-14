@@ -1,5 +1,7 @@
 import configparser
 import os
+from scripts.common.customLogger import Logger
+import logging
 
 main_dir = os.path.abspath(os.path.dirname(__file__))
 config_path = os.path.join(main_dir, 'config.ini')
@@ -23,7 +25,8 @@ parentDir = driverConfig["parentDir"]
 discordBotConfig = config["DiscordBot"]
 tokenIgor = discordBotConfig["tokenIgor"]
 tokenSana = discordBotConfig["tokenSana"]
-token = "ASD"
 # SubsPlease
 subsPleaseConfig = config["SubsPleaseRSSFeed"]
 url1080 = subsPleaseConfig["url1080"]
+# Logger
+logger = Logger(logging.INFO).log()

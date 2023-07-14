@@ -7,8 +7,6 @@ from scripts.config import config
 class Locations(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.sql_server_name = config.sqlServerName
-        self.database = config.database
 
     @commands.command(
         name="listLocationTypes"
@@ -25,7 +23,7 @@ class Locations(commands.Cog):
         , help="List all avaiable location type"
     )
     async def listSetServerLocationTypes(self, ctx):
-        conn, cursor = connectToDb(self.sql_server_name, self.database)
+        conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
         cursor.execute(f"""
             select *
             from discord_guild_channel_locations
@@ -42,10 +40,10 @@ class Locations(commands.Cog):
     )
     async def setLocations(self, ctx, channelName, type):
         try:
-            if not isAdminCheck(ctx):
+            if not self.bot.common_functions.isAdminCheck(ctx):
                 await ctx.send("You don't have permissions for this command")
                 return
-            conn, cursor = connectToDb(self.sql_server_name, self.database)
+            conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
             type = Types(type.lower()).name
             channel = discord.utils.get(ctx.guild.text_channels, name=channelName)
             if channel == None:
@@ -69,7 +67,6 @@ class Locations(commands.Cog):
                     set channel_id = {channelId}, channel_name = '{channelName.replace("'", "''")}'
                     where guild_id = {guildId} and type = '{type}'
                 """)
-            # print(guildId, guildName, channelId, channelName, type, recordExists)
             cursor.commit()
             await ctx.send(f"Successfully updated location for: `{type}` on your server")
             conn.commit()
@@ -84,10 +81,10 @@ class Locations(commands.Cog):
     )
     async def removeLocations(self, ctx, type):
         try:
-            if not isAdminCheck(ctx):
+            if not self.bot.common_functions.isAdminCheck(ctx):
                 await ctx.send("You don't have permissions for this command")
                 return
-            conn, cursor = connectToDb(self.sql_server_name, self.database)
+            conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
             type = Types(type.lower()).name
             guildId = ctx.guild.id
             cursor.execute(f"""

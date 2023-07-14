@@ -1,15 +1,11 @@
 import math
 import discord
 from discord.ext import commands
-from scripts.discordBot.extensions.commonFunctions import *
 from .paginatedEmbed import PaginatedEmbed
-from scripts.config import config
 
 class DisplayLists(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.sql_server_name = config.sqlServerName
-        self.database = config.database
 
     @commands.command(
         name="displayAllErrors"
@@ -17,10 +13,10 @@ class DisplayLists(commands.Cog):
         , help="Display all errors that occured during download"
     )
     async def displayAllErrors(self, ctx):
-        if not isAdminCheck(ctx):
+        if not self.bot.common_functions.isAdminCheck(ctx):
             await ctx.send("You don't have permissions for this command")
             return
-        conn, cursor = connectToDb(self.sql_server_name, self.database)
+        conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
         cursor.execute("""
                 select it.table_name
                 from INFORMATION_SCHEMA.TABLES as it
@@ -78,7 +74,7 @@ class DisplayLists(commands.Cog):
 
         # await ctx.send(f"There are: {errorsCount} errors, do you want to display them all? (Y/N)")
         await ctx.send(f"There are: {errorsCount} errors, how many do you want to display?")
-        userInput = await self.bot.wait_for("message", check=check(ctx.author))
+        userInput = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
         userInput = userInput.content
         # if userInput.strip().lower() != "y":
         #     return
@@ -94,7 +90,7 @@ class DisplayLists(commands.Cog):
 
     @commands.command(name="listAllAnimeToDownload")
     async def listAllAnimeToDownload(self, ctx):
-        conn, cursor = connectToDb(self.sql_server_name, self.database)
+        conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
         cursor.execute("""
                         select name, episode, current_season
                         from anime_to_download

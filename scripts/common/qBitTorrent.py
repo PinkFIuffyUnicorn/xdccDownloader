@@ -46,7 +46,7 @@ class QBitTorrent():
     def addTorent(self, anime: list):
         anime_name = anime[0]
         episode = "0" + str(anime[1]) if len(str(anime[1])) == 1 else anime[1]
-        season = "0" + str(anime[2]) if len(str(anime[2])) == 1 else anime[2]
+        # season = "0" + str(anime[2]) if len(str(anime[2])) == 1 else anime[2]
         torrent_url = anime[4]
         save_path = f"{config.parentDir}\{anime_name}\Season {anime[2]}"
         seasonEpisode = "01" if anime[1] != 0 else "00"
@@ -69,7 +69,7 @@ class QBitTorrent():
 
     def getTorrentByName(self, filename: str, category: str):
         while True:
-            torrents = self.client.torrents_info(categrpy=category)
+            torrents = self.client.torrents_info(category=category)
             torrents = [torrent for torrent in torrents if torrent.name.startswith(filename)]
             if len(torrents) > 1:
                 return f"ERROR: Multiple torrents found for filename: {filename}"
@@ -119,13 +119,11 @@ class QBitTorrent():
             sleep(5)
             torrent = self.getTorrentByHash(torrent_hash)
             download_status = "Downloading"
-            # speed = "%.2f" % (torrent.dlspeed / 1000000) + "MB/s"
             speed_progress.append({
                 "timestamp": time.time(),
                 "progress": torrent.downloaded
             })
-            while len(speed_progress) > 0 \
-                    and time.time() - speed_progress[0]["timestamp"] > 7:
+            while len(speed_progress) > 0 and time.time() - speed_progress[0]["timestamp"] > 7:
                 speed_progress.pop(0)
             if len(speed_progress) > 0:
                 bytes_delta = torrent.downloaded - speed_progress[0]["progress"]
