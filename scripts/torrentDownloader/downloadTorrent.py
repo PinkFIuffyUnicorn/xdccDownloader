@@ -24,7 +24,7 @@ class DownloadTorrent:
         self.subsplease_url = config.url1080
         # Other Variables
         self.parentDir = config.parentDir
-        # self.dbBackupPath = rf"C:\Users\Aleš\Desktop\GitHub\xdccDownloader\DB Backups\animeBKP_{self.currentTimestamp('db')}.bak"
+        # self.dbBackupPath = rf"C:\Users\Aleš\Desktop\GitHub\xdccDownloader_OBSOLETE\DB Backups\animeBKP_{self.currentTimestamp('db')}.bak"
 
     def getDbConnAndCursor(self):
         try:

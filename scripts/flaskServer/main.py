@@ -1,7 +1,7 @@
 from flask import Flask
 from scripts.common.plexLibrary import PlexLibrary
 import configparser
-from scripts.xdccDownloader.downloadXdcc import mainFunc
+from scripts.xdccDownloader_OBSOLETE.downloadXdcc import mainFunc
 
 # Config File
 config = configparser.ConfigParser()
