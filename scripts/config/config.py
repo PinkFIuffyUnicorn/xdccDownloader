@@ -29,4 +29,5 @@ tokenSana = discordBotConfig["tokenSana"]
 subsPleaseConfig = config["SubsPleaseRSSFeed"]
 url1080 = subsPleaseConfig["url1080"]
 # Logger
-logger = Logger(logging.INFO).log()
+# logger = Logger(logging.INFO).log()
+logger = Logger(logging.DEBUG).log()

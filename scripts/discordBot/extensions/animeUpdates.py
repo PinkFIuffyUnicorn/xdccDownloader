@@ -7,6 +7,8 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 import threading
+from scripts.config import config
+
 
 class AnimeUpdates(commands.Cog):
     def __init__(self, bot):
@@ -14,16 +16,13 @@ class AnimeUpdates(commands.Cog):
         self.added_anime = {}
         self.max_attempts = 5
         self.retry_add = True
+        self.logger = config.logger
         # self.updateAnimeDownloadsForTodayTorrentLoop.start()
 
-    @commands.command(name="test123")
-    async def test123(self, ctx):
-        self.bot.logger.info("ASDASD")
-
     @commands.command(
-        name="addAnime"
-        , description="Add new anime to the download list"
-        , help="Add new anime to the download list"
+        name="addAnime",
+        description="Add new anime to the download list",
+        help="Add new anime to the download list"
     )
     async def addAnime(self, ctx):
         for attempt in range(self.max_attempts):
@@ -33,7 +32,7 @@ class AnimeUpdates(commands.Cog):
                 if not self.bot.common_functions.isAdminCheck(ctx):
                     await ctx.send("You don't have permissions for this command")
                     return
-                conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
+                conn, cursor = self.bot.common_functions.connectToDb()
                 if not self.added_anime.get("name"):
                     await ctx.send("**Anime Name**")
                     name = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
@@ -63,12 +62,12 @@ class AnimeUpdates(commands.Cog):
                     live_chart_url = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
                     self.added_anime["live_chart_url"] = live_chart_url.content
 
-                if not self.added_anime["image_url"] or not self.added_anime["download_day"]:
+                if not self.added_anime.get("image_url") or not self.added_anime.get("download_day"):
                     options = Options()
                     options.add_argument("--headless")
                     driver = webdriver.Chrome(service=Service(
-                        ChromeDriverManager().install())
-                        , options=options
+                        ChromeDriverManager().install()),
+                        options=options
                     )
                     driver.get(self.added_anime["live_chart_url"])
                     image = driver.find_elements(By.XPATH, "//div[@class='anime-poster']/img")
@@ -77,8 +76,8 @@ class AnimeUpdates(commands.Cog):
                     self.added_anime["download_day"] = self.bot.common_functions.getDayOfTheWeek(driver)
 
                 embed = discord.Embed(
-                    title="Add this anime to the download list? (Y/N)"
-                    , color=discord.Color.dark_teal()
+                    title="Add this anime to the download list? (Y/N)",
+                    color=discord.Color.dark_teal()
                 )
                 embed.set_image(url=self.added_anime["image_url"])
                 embed.add_field(name="Anime Name", value=self.added_anime["name"], inline=False)
@@ -93,7 +92,7 @@ class AnimeUpdates(commands.Cog):
 
                 add_anime = False
                 while True:
-                    user_response = await self.bot.wait_for("message", check=check(ctx.author))
+                    user_response = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
                     user_response = user_response.content
                     if user_response.lower() not in ("y", "n", "yes", "no"):
                         await ctx.send("Incorrect response, respond with ```y, n, yes, no```")
@@ -122,7 +121,7 @@ class AnimeUpdates(commands.Cog):
                                 '{self.added_anime["torrent_provider"]}')
                     """)
                     cursor.commit()
-                    await ctx.send(f"Successfully Added Anime: `{name}`")
+                    await ctx.send(f"Successfully Added Anime: `{self.added_anime['name']}`")
 
                 conn.commit()
                 conn.close()

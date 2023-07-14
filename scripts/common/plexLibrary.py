@@ -1,6 +1,7 @@
 from plexapi.myplex import MyPlexAccount
 from dataclasses import dataclass
 
+
 @dataclass
 class PlexLibrary:
     """Class for plex library"""

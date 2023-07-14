@@ -3,12 +3,12 @@ import requests
 import threading
 import concurrent.futures
 from scripts.common.databaseAccess import Database
-# from scripts.torrentDownloader.downloadTorrent import getAnimeListFromDbTorrent, downloadAnimeFromListTorrent
 from scripts.torrentDownloader.downloadTorrent import DownloadTorrent
 from time import sleep
 from scripts.config import config
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
+
 
 class CommonFunctions():
     def __init__(self):
@@ -29,7 +29,7 @@ class CommonFunctions():
         return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
     def formatError(self, error_msg):
-        return str(error_msg).replace("'","''")
+        return str(error_msg).replace("'", "''")
 
     def connectToDb(self):
         try:
@@ -41,7 +41,7 @@ class CommonFunctions():
 
     def getChannelId(self, all_channels, channel_name):
         channel = discord.utils.get(all_channels, name=channel_name)
-        return channel.id if channel != None else channel
+        return channel.id if channel is not None else channel
 
     def getAllActiveThreadsName(self):
         return [thread.name for thread in threading.enumerate()]
@@ -130,12 +130,12 @@ class CommonFunctions():
 
     def updateDownloadsTorrent(self, channel_id, anime_name=None, current_day=False):
         download_torrent = DownloadTorrent(anime_name, current_day)
-        getListToDownload = download_torrent.getAnimeListFromDbTorrent()
-        if channel_id != None:
-            information_text = "" if len(getListToDownload) == 0 else " check the notifications channel for more information"
+        get_list_to_download = download_torrent.getAnimeListFromDbTorrent()
+        if channel_id is not None:
+            information_text = "" if len(get_list_to_download) == 0 else " check the notifications channel for more information"
             requests.post(url=f"https://discordapp.com/api/v6/channels/{channel_id}/messages",
-                          json={"content": f"Found {len(getListToDownload)} episodes to download{information_text}."},
+                          json={"content": f"Found {len(get_list_to_download)} episodes to download{information_text}."},
                           headers=self.discord_bot_headers)
-        if len(getListToDownload) != 0:
-            anime_list = self.sendInitialEmbed(getListToDownload)
+        if len(get_list_to_download) != 0:
+            anime_list = self.sendInitialEmbed(get_list_to_download)
             download_torrent.downloadAnimeFromListTorrent(anime_list)

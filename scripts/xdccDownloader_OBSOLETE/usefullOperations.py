@@ -40,7 +40,7 @@ def searchForEpisodeNumberErrors(directory):
                     old_file_path = u"\\".join((subdir, filename))
                     new_file_path = u"\\".join((subdir, new_filename))
                     print(old_file_path, " | ", new_file_path)
-                    os.rename(old_file_path, new_file_path)
+                    # os.rename(old_file_path, new_file_path)
 
 def renameFiles(directory, rename=False, print_errors=False):
     pattern = r"s\d+e\d+"
@@ -270,7 +270,7 @@ def getMissingAnimeInDb(directory):
 # renameFiles(directory, old_format, new_format, rename=False, print_errors=False):
 # renameFiles("A:\Anime\Summertime Render", False, True)
 # updateNotificationsView()
-searchForEpisodeNumberErrors("A:\Anime\Summer Time Render")
+searchForEpisodeNumberErrors("A:\Anime\Shiguang Dailiren")
 # update_live_chart_image_urls()
 # get_missing_episodes(rootDir + "\Kami-tachi ni Hirowareta Otoko")
 # get_missing_episodes(rootDir)

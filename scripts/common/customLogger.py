@@ -1,6 +1,7 @@
 import logging
 import pathlib
 
+
 class Logger:
     """Class for custom logger"""
 

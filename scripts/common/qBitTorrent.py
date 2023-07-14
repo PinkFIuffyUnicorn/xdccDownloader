@@ -12,6 +12,7 @@ import requests
 from scripts.config import config
 from scripts.common.plexLibrary import PlexLibrary
 
+
 @dataclass
 class QBitTorrent():
     """Class for QBitTorrent operations"""
@@ -19,6 +20,7 @@ class QBitTorrent():
     port: int
 
     def __init__(self, server: str, port: int):
+        self.logger = config.logger
         self.server = server
         self.port = port
         self.client = qbittorrentapi.Client(
@@ -45,10 +47,11 @@ class QBitTorrent():
 
     def addTorent(self, anime: list):
         anime_name = anime[0]
+        self.logger.debug(f"Adding torrent for anime: {anime_name}")
         episode = "0" + str(anime[1]) if len(str(anime[1])) == 1 else anime[1]
         # season = "0" + str(anime[2]) if len(str(anime[2])) == 1 else anime[2]
         torrent_url = anime[4]
-        save_path = f"{config.parentDir}\{anime_name}\Season {anime[2]}"
+        save_path = f"{config.parentDir}/{anime_name}/Season {anime[2]}"
         seasonEpisode = "01" if anime[1] != 0 else "00"
         if os.path.isdir(save_path):
             seasonEpisode = len([x for x in fnmatch.filter(os.listdir(save_path), "*.mkv") if "- 00 (" not in x]) + 1
@@ -56,6 +59,7 @@ class QBitTorrent():
         # filename = f"{anime_name} - s{season}e{seasonEpisode} (1080p) [{episode}].mkv"
         filename = f"{anime_name} - {seasonEpisode} (1080p) [{episode}].mkv"
         self.client.torrents_add(urls=torrent_url, save_path=save_path, rename=filename, category=anime_name)
+        self.logger.debug(f"Added torrent file: {filename}")
         sleep(2)
         torrent = self.getTorrentByName(filename, anime_name)
         torrent_hash = torrent.hash
@@ -88,6 +92,7 @@ class QBitTorrent():
 
     def sendProgress(self, torrent_hash: str, anime: list):
         anime_name = anime[0]
+        self.logger.debug(f"Started send progress for {anime_name}")
         episode = anime[1]
         current_season = anime[2]
         live_chart_image_url = anime[3]

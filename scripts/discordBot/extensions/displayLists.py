@@ -3,14 +3,15 @@ import discord
 from discord.ext import commands
 from .paginatedEmbed import PaginatedEmbed
 
+
 class DisplayLists(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(
-        name="displayAllErrors"
-        , description="Display all errors that occured during download"
-        , help="Display all errors that occured during download"
+        name="displayAllErrors",
+        description="Display all errors that occured during download",
+        help="Display all errors that occured during download"
     )
     async def displayAllErrors(self, ctx):
         if not self.bot.common_functions.isAdminCheck(ctx):
@@ -20,9 +21,9 @@ class DisplayLists(commands.Cog):
         cursor.execute("""
                 select it.table_name
                 from INFORMATION_SCHEMA.TABLES as it
-            	inner join sys.tables as t on t.name = it.TABLE_NAME
-            	where
-            	it.TABLE_NAME in (select replace(dir_name,' ','_') from anime_to_download where download = 1)
+                inner join sys.tables as t on t.name = it.TABLE_NAME
+                where
+                it.TABLE_NAME in (select replace(dir_name,' ','_') from anime_to_download where download = 1)
             """)
         tablesList = cursor.fetchall()
 
@@ -32,7 +33,7 @@ class DisplayLists(commands.Cog):
             animeName = tableName.replace("_", " ")
 
             cursor.execute(f"""
-                    select 
+                    select
                         season
                         , episode
                         , xdcc
@@ -58,14 +59,14 @@ class DisplayLists(commands.Cog):
                 #     f.write(image)
 
                 embed = discord.Embed(
-                    title="Download Error For Anime Episode"
-                    , description=f"**Anime:** {animeName}\n"
-                                  f"**English Name:** {englishName}\n"
-                                  f"**Season:** {season}\n"
-                                  f"**Episode:** {episode}\n"
-                                  f"**Xdcc:** {xdcc}\n"
-                                  f"**Error:** {error}"
-                    , color=discord.Color.dark_teal()
+                    title="Download Error For Anime Episode",
+                    description=f"**Anime:** {animeName}\n"
+                                f"**English Name:** {englishName}\n"
+                                f"**Season:** {season}\n"
+                                f"**Episode:** {episode}\n"
+                                f"**Xdcc:** {xdcc}\n"
+                                f"**Error:** {error}",
+                    color=discord.Color.dark_teal()
                 )
                 embedList.append(embed)
                 # await ctx.send(embed=embed)
@@ -113,8 +114,8 @@ class DisplayLists(commands.Cog):
             if new_page:
                 new_page = False
                 embed = discord.Embed(
-                    title=f"All Anime currently scheduled to download."
-                    , color=discord.Color.dark_teal()
+                    title=f"All Anime currently scheduled to download.",
+                    color=discord.Color.dark_teal()
                 )
                 embed.add_field(name="Anime Name", value="", inline=True)
                 embed.add_field(name="Current Season", value="", inline=True)

@@ -1,26 +1,25 @@
 import discord
 from discord.ext import commands
 from scripts.common.enumTypes import Types
-from scripts.discordBot.extensions.commonFunctions import *
-from scripts.config import config
+
 
 class Locations(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(
-        name="listLocationTypes"
-        , description="List all location type set on server"
-        , help="List all avaiable location type"
+        name="listLocationTypes",
+        description="List all location type set on server",
+        help="List all avaiable location type"
     )
     async def listLocationTypes(self, ctx):
         locationsList = u"\n".join(([locationType for locationType in Types.__members__]))
         await ctx.send(f"```\n{locationsList}```")
 
     @commands.command(
-        name="listSetServerLocationTypes"
-        , description="List all location type set on server"
-        , help="List all avaiable location type"
+        name="listSetServerLocationTypes",
+        description="List all location type set on server",
+        help="List all avaiable location type"
     )
     async def listSetServerLocationTypes(self, ctx):
         conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
@@ -29,14 +28,14 @@ class Locations(commands.Cog):
             from discord_guild_channel_locations
             where guild_id = {ctx.guild.id}
         """)
-        locationsList = cursor.fetchall()
-        locationsList = u"\n".join(([f"{row[4]} - {row[5]}" for row in locationsList]))
-        await ctx.send(f"```\n{locationsList}```")
+        locations_list = cursor.fetchall()
+        locations_list = u"\n".join(([f"{row[4]} - {row[5]}" for row in locations_list]))
+        await ctx.send(f"```\n{locations_list}```")
 
     @commands.command(
-        name="setLocations"
-        , description="Set locations for notification updates"
-        , help="Set locations for notification updates"
+        name="setLocations",
+        description="Set locations for notification updates",
+        help="Set locations for notification updates"
     )
     async def setLocations(self, ctx, channelName, type):
         try:
@@ -46,7 +45,7 @@ class Locations(commands.Cog):
             conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
             type = Types(type.lower()).name
             channel = discord.utils.get(ctx.guild.text_channels, name=channelName)
-            if channel == None:
+            if channel is None:
                 await ctx.send(f"Channel: `{channelName}` was not found on your server, please check your spelling.")
                 return
             channelId = channel.id
@@ -75,9 +74,9 @@ class Locations(commands.Cog):
             await ctx.send(f"Error Occurred: `{e}`")
 
     @commands.command(
-        name="removeLocations"
-        , description="Remove locations for notification updates"
-        , help="Remove locations for notification updates"
+        name="removeLocations",
+        description="Remove locations for notification updates",
+        help="Remove locations for notification updates"
     )
     async def removeLocations(self, ctx, type):
         try:

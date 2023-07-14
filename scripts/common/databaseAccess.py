@@ -4,6 +4,7 @@ import os
 import glob
 from datetime import datetime, timedelta
 
+
 @dataclass
 class Database():
     """Class for Database operations"""

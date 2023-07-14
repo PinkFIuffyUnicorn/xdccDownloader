@@ -1,14 +1,8 @@
-import discord
-from discord.ext import commands
-
 class PaginatedEmbed:
     def __init__(self, ctx, embeds):
         self.ctx = ctx
         self.embeds = embeds
         self.index = 0
-
-        # for x in embeds:
-        #     print(x.fields)
 
     async def start(self):
         if not self.embeds:
@@ -24,7 +18,8 @@ class PaginatedEmbed:
         while True:
             try:
                 reaction, user = await self.ctx.bot.wait_for('reaction_add', timeout=60.0, check=check)
-            except:
+            except Exception as e:
+                print(e)
                 break
 
             if str(reaction.emoji) == '▶️' and self.index < len(self.embeds) - 1:

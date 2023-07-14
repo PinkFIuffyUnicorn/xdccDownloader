@@ -8,6 +8,7 @@ from scripts.config import config
 
 TOKEN = config.tokenSana
 
+
 class MyBot(commands.Bot):
     def __init__(self, command_prefix, **options):
         super().__init__(command_prefix, **options)
@@ -34,6 +35,7 @@ class MyBot(commands.Bot):
     async def on_ready(self):
         self.logger.info(f"Discord Bot {self.user} is online")
         print(f"{self.user} is online!")
+
 
 bot = MyBot(command_prefix="!")
 bot.run(TOKEN)

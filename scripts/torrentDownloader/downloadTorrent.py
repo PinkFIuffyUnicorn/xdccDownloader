@@ -6,6 +6,7 @@ from scripts.common.databaseAccess import Database
 from scripts.common.qBitTorrent import QBitTorrent
 from scripts.config import config
 
+
 class DownloadTorrent:
     def __init__(self, anime_name, current_day):
         super().__init__()
@@ -40,7 +41,6 @@ class DownloadTorrent:
         cursor.execute("""
             select channel_id from discord_guild_channel_locations where type = 'updateAnimeNotifications'
         """)
-
         return cursor.fetchall()
 
     def getAnimeListFromDbTorrent(self):
@@ -49,8 +49,8 @@ class DownloadTorrent:
         conn, cursor = self.getDbConnAndCursor()
         if conn == 2:
             sys.exit(cursor)
-        downloadAnimeName = f" and name = '{self.anime_name}'" if self.anime_name != None and self.anime_name != "" else " "
-        currentDayDownload = f" and download_day = {datetime.now().weekday() + 1}" if self.current_day == True else " "
+        downloadAnimeName = f" and name = '{self.anime_name}'" if self.anime_name is not None and self.anime_name != "" else " "
+        currentDayDownload = f" and download_day = {datetime.now().weekday() + 1}" if self.current_day is True else " "
         sql = f"""
                     select
                          id as '0'
@@ -75,16 +75,11 @@ class DownloadTorrent:
                 """
         cursor.execute(sql)
         downloadList = cursor.fetchall()
+        self.logger.info(f"Found {len(downloadList)} anime to check")
 
         subsplease_query_list = [f"([{x[10]}] {x[1]})" for x in downloadList]
         subsplease_query_string = u"|".join((subsplease_query_list)) + " 1080p"
-        # print(f"https://nyaa.si/?page=rss&q={subsplease_query_string}&c=0_0&f=0")
 
-        # https://nyaa.si/?page=rss&q={QUERY}&c=0_0&f=0
-        # https://nyaa.si/?page=rss&q=([SubsPlease]) | ([Anime Time] Tengoku) 1080p&c=0_0&f=0
-
-        # r = requests.get(url=subsplease_url)
-        # print(subsplease_query_string)
         r = requests.get(url=f"https://nyaa.si/?page=rss&q={subsplease_query_string}&c=0_0&f=0", timeout=300)
         subsplease_content = r.content
         root = etree.fromstring(subsplease_content)
@@ -92,6 +87,7 @@ class DownloadTorrent:
         for row in downloadList:
             id = int(row[0])
             name = row[1]
+            self.logger.info(f"Checking anime {name} for downloads")
             episode = int(row[2])
             # episode = "0" + str(episode) if len(str(episode)) == 1 else episode
             quality = row[3]
@@ -118,12 +114,16 @@ class DownloadTorrent:
                 if name == "Summer Time Rendering":
                     searchTerm = f"{name} S01E{'0' + str(episode) if len(str(episode)) == 1 else episode}"
                 # print(searchTerm)
+                self.logger.debug(f"Search term for {name}: {searchTerm}")
                 items = root.xpath(f".//item/title[contains(text(), '{searchTerm}')]")
                 items = [item.getparent() for item in items]
+                self.logger.info(f"Found {len(items)} items")
                 for index, item in enumerate(items):
                     torrent_link = item[1].text
                     # animeList.append(["", "", dir_name, episode, current_season, live_chart_image_url, torrent_link])
-                    animeList.append([dir_name, episode, current_season, live_chart_image_url, torrent_link, english_name])
+                    current_anime = [dir_name, episode, current_season, live_chart_image_url, torrent_link, english_name]
+                    self.logger.debug(f"Current Anime Data: {str(current_anime)}")
+                    animeList.append(current_anime)
 
                     cursor.execute(
                         f"select count(*) from information_schema.tables where table_name = '{dir_name.replace(' ', '_')}'"

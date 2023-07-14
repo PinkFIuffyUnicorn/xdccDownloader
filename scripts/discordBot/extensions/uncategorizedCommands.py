@@ -1,6 +1,6 @@
-import discord
 from discord.ext import commands
 from scripts.common.plexLibrary import PlexLibrary
+
 
 class UncategorizedCommands(commands.Cog):
     def __init__(self, bot):
