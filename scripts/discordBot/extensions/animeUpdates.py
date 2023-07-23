@@ -17,12 +17,12 @@ class AnimeUpdates(commands.Cog):
         self.max_attempts = 5
         self.retry_add = True
         self.logger = config.logger
-        # self.updateAnimeDownloadsForTodayTorrentLoop.start()
+        self.updateAnimeDownloadsForTodayTorrentLoop.start()
 
     @commands.command(
         name="addAnime",
         description="Add new anime to the download list",
-        help="Add new anime to the download list"
+        help="Usage `!addAnime' then follow the instructions"
     )
     async def addAnime(self, ctx):
         for attempt in range(self.max_attempts):
@@ -143,7 +143,11 @@ class AnimeUpdates(commands.Cog):
                         self.logger.info("Retrying download")
                         break
 
-    @commands.command(name="updateAnimeDownloadsTorrent")
+    @commands.command(
+        name="updateAnimeDownloadsTorrent",
+        description="Check for new episodes to be downloaded",
+        help='Usage `!updateAnimeDownloadsTorrent "anime name" ` "anime name" is optional, add it to check for a specific anime'
+    )
     async def updateAnimeDownloadsTorrent(self, ctx, *args):
         if "UpdateAnimeDownloads" in self.bot.common_functions.getAllActiveThreadsName():
             await ctx.send("Downloading is already running, check notifications channel for more information.")

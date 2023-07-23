@@ -40,7 +40,7 @@ def searchForEpisodeNumberErrors(directory):
                     old_file_path = u"\\".join((subdir, filename))
                     new_file_path = u"\\".join((subdir, new_filename))
                     print(old_file_path, " | ", new_file_path)
-                    # os.rename(old_file_path, new_file_path)
+                    os.rename(old_file_path, new_file_path)
 
 def renameFiles(directory, rename=False, print_errors=False):
     pattern = r"s\d+e\d+"
