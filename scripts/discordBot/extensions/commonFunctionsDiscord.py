@@ -3,14 +3,14 @@ import requests
 import threading
 import concurrent.futures
 from scripts.common.databaseAccess import Database
-from scripts.torrentDownloader.downloadTorrent import DownloadTorrent
+from scripts.torrentDownloader.updateAnimeDownloads import UpdateAnimeDownloads
 from time import sleep
 from scripts.config import config
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
 
 
-class CommonFunctions():
+class CommonFunctionsDiscord():
     def __init__(self):
         self.sql_server_name = config.sqlServerName
         self.database = config.database
@@ -128,9 +128,9 @@ class CommonFunctions():
 
         return day_of_week
 
-    def updateDownloadsTorrent(self, channel_id, anime_name=None, current_day=False):
-        download_torrent = DownloadTorrent(anime_name, current_day)
-        get_list_to_download = download_torrent.getAnimeListFromDbTorrent()
+    def updateAnimeDownloadsCommon(self, channel_id, anime_name=None, current_day=False):
+        update_anime_downloads = UpdateAnimeDownloads(anime_name, current_day)
+        get_list_to_download = update_anime_downloads.getAnimeListFromDb()
         if channel_id is not None:
             information_text = "" if len(get_list_to_download) == 0 else " check the notifications channel for more information"
             requests.post(url=f"https://discordapp.com/api/v6/channels/{channel_id}/messages",
@@ -138,4 +138,4 @@ class CommonFunctions():
                           headers=self.discord_bot_headers)
         if len(get_list_to_download) != 0:
             anime_list = self.sendInitialEmbed(get_list_to_download)
-            download_torrent.downloadAnimeFromListTorrent(anime_list)
+            update_anime_downloads.downloadAnimeFromList(anime_list)

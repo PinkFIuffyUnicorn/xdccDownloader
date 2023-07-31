@@ -9,8 +9,9 @@ class Locations(commands.Cog):
 
     @commands.command(
         name="listLocationTypes",
-        description="List all location type set on server",
-        help="List all avaiable location type"
+        aliases=["listLT"],
+        description="List all location type avaiable",
+        help="Usage `!listLocationTypes`"
     )
     async def listLocationTypes(self, ctx):
         locationsList = u"\n".join(([locationType for locationType in Types.__members__]))
@@ -18,8 +19,9 @@ class Locations(commands.Cog):
 
     @commands.command(
         name="listSetServerLocationTypes",
-        description="List all location type set on server",
-        help="List all avaiable location type"
+        aliases=["listSLT"],
+        description="List all location type set on this server",
+        help="Usage `!listSetServerLocationTypes`"
     )
     async def listSetServerLocationTypes(self, ctx):
         conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
@@ -34,8 +36,9 @@ class Locations(commands.Cog):
 
     @commands.command(
         name="setLocations",
+        aliases=["setL"],
         description="Set locations for notification updates",
-        help="Set locations for notification updates"
+        help='Usage `!setLocations "channel-name" "type"`'
     )
     async def setLocations(self, ctx, channelName, type):
         try:
@@ -75,8 +78,9 @@ class Locations(commands.Cog):
 
     @commands.command(
         name="removeLocations",
+        aliases=["removeL"],
         description="Remove locations for notification updates",
-        help="Remove locations for notification updates"
+        help='Usage `!removeLocations "type"`'
     )
     async def removeLocations(self, ctx, type):
         try:

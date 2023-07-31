@@ -11,6 +11,7 @@ from puffotter.units import human_readable_bytes
 import requests
 from scripts.config import config
 from scripts.common.plexLibrary import PlexLibrary
+from scripts.common.commonFunctions import CommonFunctions
 
 
 @dataclass
@@ -23,6 +24,7 @@ class QBitTorrent():
         self.logger = config.logger
         self.server = server
         self.port = port
+        self.common_functions = CommonFunctions()
         self.client = qbittorrentapi.Client(
             host=self.server,
             port=self.port
@@ -60,15 +62,17 @@ class QBitTorrent():
         filename = f"{anime_name} - {seasonEpisode} (1080p) [{episode}].mkv"
         self.client.torrents_add(urls=torrent_url, save_path=save_path, rename=filename, category=anime_name)
         self.logger.debug(f"Added torrent file: {filename}")
-        sleep(2)
         torrent = self.getTorrentByName(filename, anime_name)
         torrent_hash = torrent.hash
         self.client.torrents_pause(torrent_hash)
         for file in torrent.files:
             self.client.torrents_rename_file(torrent_hash, file.id, filename)
         self.client.torrents_resume(torrent_hash)
-        sleep(2)
-        thread = threading.Thread(target=self.sendProgress, args=(torrent_hash, anime), name=f"send_progress_{anime_name}")
+        retries = 0
+        while not os.path.exists(f"{save_path}/{filename}") and retries < 61:
+            retries += 1
+            sleep(1)
+        thread = threading.Thread(target=self.sendProgress, args=(torrent_hash, anime), name=f"send_progress_{anime_name}_{seasonEpisode}")
         thread.start()
 
     def getTorrentByName(self, filename: str, category: str):
@@ -89,6 +93,13 @@ class QBitTorrent():
             elif len(torrents) == 0:
                 continue
             return torrents[0]
+
+    def fetch(self, url, payload):
+        response = requests.patch(url, json=payload, headers=self.discord_bot_headers)
+        return response.json()
+
+    def fetchWithRetry(self, url_list, payload):
+        return self.common_functions.retryOnException(self.fetch, (url_list, payload))
 
     def sendProgress(self, torrent_hash: str, anime: list):
         anime_name = anime[0]
@@ -158,8 +169,10 @@ class QBitTorrent():
             embed.set_field_at(4, name="Time Remaining", value=f"{self.secondsToHMS(time_remaining)}")
             embed.set_field_at(5, name="Status", value=download_status)
             payload["embed"] = embed_dict
+            # urls_payload = list(map(lambda item: (item, payload), discord_url_list))
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                tuple(executor.map(lambda url: (response := requests.patch(url, json=payload, headers=self.discord_bot_headers).json()),
-                                   discord_url_list))
+                results = executor.map(lambda url_list: self.fetchWithRetry(url_list, payload), discord_url_list)
+                # tuple(executor.map(lambda url: (response := requests.patch(url, json=payload, headers=self.discord_bot_headers).json()),
+                #                    discord_url_list))
         myPlexLibrary = PlexLibrary(config.username, config.password, config.plexServerName, "Anime")
         myPlexLibrary.updatePlexLibraryData()

@@ -1,5 +1,5 @@
 from discord.ext import commands, tasks
-from extensions.commonFunctions import CommonFunctions
+from extensions.commonFunctionsDiscord import CommonFunctionsDiscord
 from extensions.locations import Locations
 from extensions.displayLists import DisplayLists
 from extensions.animeUpdates import AnimeUpdates
@@ -13,7 +13,7 @@ class MyBot(commands.Bot):
     def __init__(self, command_prefix, **options):
         super().__init__(command_prefix, **options)
         self.logger = config.logger
-        self.common_functions = CommonFunctions()
+        self.common_functions = CommonFunctionsDiscord()
         # Plex Config
         self.username = config.username
         self.password = config.password

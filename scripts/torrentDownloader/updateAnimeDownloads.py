@@ -7,7 +7,7 @@ from scripts.common.qBitTorrent import QBitTorrent
 from scripts.config import config
 
 
-class DownloadTorrent:
+class UpdateAnimeDownloads:
     def __init__(self, anime_name, current_day):
         super().__init__()
         self.anime_name = anime_name
@@ -43,7 +43,8 @@ class DownloadTorrent:
         """)
         return cursor.fetchall()
 
-    def getAnimeListFromDbTorrent(self):
+    def getAnimeListFromDb(self):
+        self.logger.info(f"############################## Started checking for new anime downloads (getAnimeListFromDb) ##############################")
         animeList = []
         # Database Connection And Cursor
         conn, cursor = self.getDbConnAndCursor()
@@ -87,7 +88,7 @@ class DownloadTorrent:
         for row in downloadList:
             id = int(row[0])
             name = row[1]
-            self.logger.info(f"Checking anime {name} for downloads")
+            self.logger.debug(f"Checking anime {name} for downloads")
             episode = int(row[2])
             # episode = "0" + str(episode) if len(str(episode)) == 1 else episode
             quality = row[3]
@@ -113,14 +114,13 @@ class DownloadTorrent:
                 searchTerm = f"{name} - {'0' + str(episode) if len(str(episode)) == 1 else episode}"
                 if name == "Summer Time Rendering":
                     searchTerm = f"{name} S01E{'0' + str(episode) if len(str(episode)) == 1 else episode}"
-                # print(searchTerm)
                 self.logger.debug(f"Search term for {name}: {searchTerm}")
                 items = root.xpath(f".//item/title[contains(text(), '{searchTerm}')]")
                 items = [item.getparent() for item in items]
-                self.logger.info(f"Found {len(items)} items")
                 for index, item in enumerate(items):
+                    if index == 0:
+                        self.logger.info(f"Found {len(items)} episodes for {name}")
                     torrent_link = item[1].text
-                    # animeList.append(["", "", dir_name, episode, current_season, live_chart_image_url, torrent_link])
                     current_anime = [dir_name, episode, current_season, live_chart_image_url, torrent_link, english_name]
                     self.logger.debug(f"Current Anime Data: {str(current_anime)}")
                     animeList.append(current_anime)
@@ -171,9 +171,13 @@ class DownloadTorrent:
         conn.commit()
         conn.close()
 
+        self.logger.info(f"Found {len(animeList)} new episodes to download")
+        self.logger.info(f"############################## Ended checking for new anime downloads (getAnimeListFromDb) ##############################")
+
         return animeList
 
-    def downloadAnimeFromListTorrent(self, anime_list_to_download):
+    def downloadAnimeFromList(self, anime_list_to_download):
+        self.logger.info(f"############################## Started adding new torrents (downloadAnimeFromList) ##############################")
         conn, cursor = self.getDbConnAndCursor()
         if conn == 2:
             sys.exit(cursor)
@@ -181,4 +185,5 @@ class DownloadTorrent:
         qbt_client = QBitTorrent("localhost", 8080)
 
         for anime in anime_list_to_download:
+            self.logger.info(f"Adding anime {anime[0]}, episode {anime[1]}")
             qbt_client.addTorent(anime)

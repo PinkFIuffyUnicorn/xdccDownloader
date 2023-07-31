@@ -17,12 +17,12 @@ class AnimeUpdates(commands.Cog):
         self.max_attempts = 5
         self.retry_add = True
         self.logger = config.logger
-        self.updateAnimeDownloadsForTodayTorrentLoop.start()
+        self.updateAnimeDownloadsForTodayLoop.start()
 
     @commands.command(
         name="addAnime",
         description="Add new anime to the download list",
-        help="Usage `!addAnime' then follow the instructions"
+        help="Usage `!addAnime` then follow the instructions"
     )
     async def addAnime(self, ctx):
         for attempt in range(self.max_attempts):
@@ -144,39 +144,45 @@ class AnimeUpdates(commands.Cog):
                         break
 
     @commands.command(
-        name="updateAnimeDownloadsTorrent",
+        name="updateAnimeDownloads",
+        aliases=["updateAnime"],
         description="Check for new episodes to be downloaded",
-        help='Usage `!updateAnimeDownloadsTorrent "anime name" ` "anime name" is optional, add it to check for a specific anime'
+        help='Usage `!updateAnimeDownloads "anime name" ` "anime name" is optional, add it to check for a specific anime'
     )
-    async def updateAnimeDownloadsTorrent(self, ctx, *args):
+    async def updateAnimeDownloads(self, ctx, *args):
         if "UpdateAnimeDownloads" in self.bot.common_functions.getAllActiveThreadsName():
             await ctx.send("Downloading is already running, check notifications channel for more information.")
             return False
         animeName = None
         if len(args) > 1:
             await ctx.send(
-                'Incorrect syntax, usage: ```!updateAnimeDownloadsTorrent``` or ```!updateAnimeDownloadsTorrent "anime name"```')
+                'Incorrect syntax, usage: ```!updateAnimeDownloads``` or ```!updateAnimeDownloads "anime name"```')
             return False
         elif len(args) == 1:
             animeName = args[0]
-        thread = threading.Thread(target=self.bot.common_functions.updateDownloadsTorrent, args=(ctx.channel.id, animeName, False),
+        thread = threading.Thread(target=self.bot.common_functions.updateAnimeDownloadsCommon, args=(ctx.channel.id, animeName, False),
                                   name="UpdateAnimeDownloads")
         thread.start()
 
-    @commands.command(name="updateAnimeDownloadsForTodayTorrent")
-    async def updateAnimeDownloadsForTodayTorrent(self, ctx):
+    @commands.command(
+        name="updateAnimeDownloadsForToday",
+        aliases=["updateAnimeToday"],
+        description="Check for new episodes to be downloaded, for today only",
+        help="Usage `!updateAnimeDownloadsForToday`"
+    )
+    async def updateAnimeDownloadsForToday(self, ctx):
         if "UpdateAnimeDownloads" in self.bot.common_functions.getAllActiveThreadsName():
             await ctx.send("Download is already running, check notifications channel for more information.")
             return False
-        thread = threading.Thread(target=self.bot.common_functions.updateDownloadsTorrent, args=(ctx.channel.id, None, True),
+        thread = threading.Thread(target=self.bot.common_functions.updateAnimeDownloadsCommon, args=(ctx.channel.id, None, True),
                                   name="UpdateAnimeDownloads")
         thread.start()
 
     @tasks.loop(seconds=7200)
-    async def updateAnimeDownloadsForTodayTorrentLoop(self):
+    async def updateAnimeDownloadsForTodayLoop(self):
         if "UpdateAnimeDownloads" in self.bot.common_functions.getAllActiveThreadsName():
             print("Download is already running")
             return False
-        thread = threading.Thread(target=self.bot.common_functions.updateDownloadsTorrent, args=(None, None, True),
+        thread = threading.Thread(target=self.bot.common_functions.updateAnimeDownloadsCommon, args=(None, None, True),
                                   name="UpdateAnimeDownloads")
         thread.start()

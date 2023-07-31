@@ -9,11 +9,12 @@ class DisplayLists(commands.Cog):
         self.bot = bot
 
     @commands.command(
-        name="displayAllErrors",
+        name="listAllErrors",
+        aliases=["listErrors"],
         description="Display all errors that occured during download",
-        help="Display all errors that occured during download"
+        help="Usage ˙!listAllErrors˙"
     )
-    async def displayAllErrors(self, ctx):
+    async def listAllErrors(self, ctx):
         if not self.bot.common_functions.isAdminCheck(ctx):
             await ctx.send("You don't have permissions for this command")
             return
@@ -89,7 +90,12 @@ class DisplayLists(commands.Cog):
         conn.commit()
         conn.close()
 
-    @commands.command(name="listAllAnimeToDownload")
+    @commands.command(
+        name="listAllAnimeToDownload",
+        aliases=["listAnime"],
+        description="List all anime currently scheduled to download",
+        help="Usage `!listAllAnimeToDownload`"
+    )
     async def listAllAnimeToDownload(self, ctx):
         conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
         cursor.execute("""
