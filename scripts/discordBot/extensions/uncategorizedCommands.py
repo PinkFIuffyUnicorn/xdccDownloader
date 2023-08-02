@@ -34,3 +34,6 @@ class UncategorizedCommands(commands.Cog):
     async def ping(self, ctx):
         self.bot.logger.info("pong!")
         await ctx.send("Pong!")
+
+async def setup(bot):
+    await bot.add_cog(UncategorizedCommands(bot))

@@ -108,3 +108,6 @@ class Locations(commands.Cog):
             conn.close()
         except Exception as e:
             await ctx.send(f"Error Occurred: `{e}`")
+
+async def setup(bot):
+    await bot.add_cog(Locations(bot))

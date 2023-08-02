@@ -186,3 +186,6 @@ class AnimeUpdates(commands.Cog):
         thread = threading.Thread(target=self.bot.common_functions.updateAnimeDownloadsCommon, args=(None, None, True),
                                   name="UpdateAnimeDownloads")
         thread.start()
+
+async def setup(bot):
+    await bot.add_cog(AnimeUpdates(bot))

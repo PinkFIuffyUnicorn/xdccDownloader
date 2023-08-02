@@ -145,3 +145,6 @@ class DisplayLists(commands.Cog):
         if len(embedList) > 0:
             paginated_embed = PaginatedEmbed(ctx, embedList)
             await paginated_embed.start()
+
+async def setup(bot):
+    await bot.add_cog(DisplayLists(bot))
