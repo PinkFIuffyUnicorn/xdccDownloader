@@ -70,6 +70,7 @@ class UpdateAnimeDownloads:
                     where 1 = 1
                     and download = 1
                     and done = 0
+                    and dropped = 0
                     {downloadAnimeName}
                     {currentDayDownload}
                      order by name
@@ -81,8 +82,10 @@ class UpdateAnimeDownloads:
         subsplease_query_list = [f"([{x[10]}] {x[1]})" for x in downloadList]
         subsplease_query_string = u"|".join((subsplease_query_list)) + " 1080p"
 
+        # print(subsplease_query_string)
         r = requests.get(url=f"https://nyaa.si/?page=rss&q={subsplease_query_string}&c=0_0&f=0", timeout=300)
         subsplease_content = r.content
+        # print(subsplease_content)
         root = etree.fromstring(subsplease_content)
 
         for row in downloadList:
@@ -112,8 +115,13 @@ class UpdateAnimeDownloads:
 
             while True:
                 searchTerm = f"{name} - {'0' + str(episode) if len(str(episode)) == 1 else episode}"
-                if name == "Summer Time Rendering":
-                    searchTerm = f"{name} S01E{'0' + str(episode) if len(str(episode)) == 1 else episode}"
+                # if name == "Summer Time Rendering":
+                #     searchTerm = f"{name} S01E{'0' + str(episode) if len(str(episode)) == 1 else episode}"
+                if torrent_provider == "Chihiro":
+                    searchTerm = f"{name} {'0' + str(episode) if len(str(episode)) == 1 else episode}"
+                elif torrent_provider == "EMBER":
+                    searchCurrentSeason = f"{'0' + str(current_season) if len(str(current_season)) == 1 else current_season}"
+                    searchTerm = f"{name} S{searchCurrentSeason}E{'0' + str(episode) if len(str(episode)) == 1 else episode}"
                 self.logger.debug(f"Search term for {name}: {searchTerm}")
                 items = root.xpath(f".//item/title[contains(text(), '{searchTerm}')]")
                 items = [item.getparent() for item in items]

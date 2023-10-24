@@ -128,6 +128,14 @@ class CommonFunctionsDiscord():
 
         return day_of_week
 
+    def getDayOfTheWeekFromUnix(self, driver):
+        countdown_bar = driver.find_elements(By.XPATH, "//div[@data-controller='countdown-bar']")[0]
+        countdown_bar.get_attribute("data-countdown-bar-timestamp")
+        dt = datetime.fromtimestamp(1697299200)
+        day_of_week = dt.strftime("%u")
+
+        return day_of_week
+
     def updateAnimeDownloadsCommon(self, channel_id, anime_name=None, current_day=False):
         update_anime_downloads = UpdateAnimeDownloads(anime_name, current_day)
         get_list_to_download = update_anime_downloads.getAnimeListFromDb()

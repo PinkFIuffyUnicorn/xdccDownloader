@@ -8,6 +8,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 import threading
 from scripts.config import config
+import sys
+import traceback
 
 
 class AnimeUpdates(commands.Cog):
@@ -17,7 +19,7 @@ class AnimeUpdates(commands.Cog):
         self.max_attempts = 5
         self.retry_add = True
         self.logger = config.logger
-        self.updateAnimeDownloadsForTodayLoop.start()
+        # self.updateAnimeDownloadsForTodayLoop.start()
 
     @commands.command(
         name="addAnime",
@@ -70,10 +72,11 @@ class AnimeUpdates(commands.Cog):
                         options=options
                     )
                     driver.get(self.added_anime["live_chart_url"])
-                    image = driver.find_elements(By.XPATH, "//div[@class='anime-poster']/img")
+                    # image = driver.find_elements(By.XPATH, "//div[@class='anime-poster']/img")
+                    image = driver.find_elements(By.XPATH, "//img[@class='overflow-hidden rounded']")
                     self.added_anime["image_url"] = image[0].get_attribute("src")
 
-                    self.added_anime["download_day"] = self.bot.common_functions.getDayOfTheWeek(driver)
+                    self.added_anime["download_day"] = self.bot.common_functions.getDayOfTheWeekFromUnix(driver)
 
                 embed = discord.Embed(
                     title="Add this anime to the download list? (Y/N)",
@@ -128,7 +131,9 @@ class AnimeUpdates(commands.Cog):
                 self.added_anime = {}
                 break
             except Exception as e:
-                self.logger.error(f"Error in addAnime(): {e}")
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                line_number = exc_traceback.tb_lineno
+                self.logger.error(f"Error in addAnime({line_number}): {e}")
                 await ctx.send("Error occured, would you like to retry adding the previous entry? (y/n)")
                 user_response = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
                 user_response = user_response.content
