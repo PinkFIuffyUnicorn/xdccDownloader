@@ -18,7 +18,7 @@ class DisplayLists(commands.Cog):
         if not self.bot.common_functions.isAdminCheck(ctx):
             await ctx.send("You don't have permissions for this command")
             return
-        conn, cursor = self.bot.common_functions.connectToDb(self.bot.sql_server_name, self.bot.database)
+        conn, cursor = self.bot.common_functions.connectToDb()
         cursor.execute("""
                 select it.table_name
                 from INFORMATION_SCHEMA.TABLES as it
