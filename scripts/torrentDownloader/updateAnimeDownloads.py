@@ -83,6 +83,7 @@ class UpdateAnimeDownloads:
         subsplease_query_string = u"|".join((subsplease_query_list)) + " 1080p"
 
         # print(subsplease_query_string)
+        self.logger.debug(f"Query String: {subsplease_query_string}")
         r = requests.get(url=f"https://nyaa.si/?page=rss&q={subsplease_query_string}&c=0_0&f=0", timeout=300)
         subsplease_content = r.content
         # print(subsplease_content)

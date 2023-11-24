@@ -113,6 +113,7 @@ class CommonFunctionsDiscord():
                         f"https://discordapp.com/api/v6/channels/{channel_id}/messages/{message_id}")
                 anime_list[index].append(temp_discord_url_list)
 
+            # anime_list[index].append(["https://discordapp.com/api/v6/channels/{channel_id}/messages/"])
             sleep(1)
 
         return anime_list
