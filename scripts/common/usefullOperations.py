@@ -184,4 +184,5 @@ def getMissingAnimeInDb(directory):
 
 # def
 
-find_missing_images(rootDir)
+# find_missing_images(rootDir)
+get_missing_episodes("A:\Anime")

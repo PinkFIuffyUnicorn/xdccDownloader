@@ -5,6 +5,7 @@ from datetime import datetime
 from scripts.common.databaseAccess import Database
 from scripts.common.qBitTorrent import QBitTorrent
 from scripts.config import config
+from scripts.common.commonFunctions import CommonFunctions
 
 
 class UpdateAnimeDownloads:
@@ -26,6 +27,7 @@ class UpdateAnimeDownloads:
         # Other Variables
         self.parentDir = config.parentDir
         # self.dbBackupPath = rf"C:\Users\Aleš\Desktop\GitHub\xdccDownloader_OBSOLETE\DB Backups\animeBKP_{self.currentTimestamp('db')}.bak"
+        self.common_functions = CommonFunctions()
 
     def getDbConnAndCursor(self):
         try:
@@ -52,7 +54,7 @@ class UpdateAnimeDownloads:
             sys.exit(cursor)
         downloadAnimeName = f" and name = '{self.anime_name}'" if self.anime_name is not None and self.anime_name != "" else " "
         currentDayDownload = f" and download_day = {datetime.now().weekday() + 1}" if self.current_day is True else " "
-        sql = f"""
+        sql = f"""  
                     select
                          id as '0'
                         , name as '1'
@@ -84,7 +86,9 @@ class UpdateAnimeDownloads:
 
         # print(subsplease_query_string)
         self.logger.debug(f"Query String: {subsplease_query_string}")
-        r = requests.get(url=f"https://nyaa.si/?page=rss&q={subsplease_query_string}&c=0_0&f=0", timeout=300)
+        # r = requests.get(url=f"https://nyaa.si/?page=rss&q={subsplease_query_string}&c=0_0&f=0", timeout=300)
+        # r = lambda: requests.get(url=f"https://nyaa.si/?page=rss&q={subsplease_query_string}&c=0_0&f=0", timeout=300)
+        r = self.common_functions.retryOnException(lambda: requests.get(url=f"https://nyaa.si/?page=rss&q={subsplease_query_string}&c=0_0&f=0", timeout=300))
         subsplease_content = r.content
         # print(subsplease_content)
         root = etree.fromstring(subsplease_content)
@@ -185,7 +189,7 @@ class UpdateAnimeDownloads:
 
         return animeList
 
-    def downloadAnimeFromList(self, anime_list_to_download):
+    def downloadAnimeFromList(self, anime_list_to_download, send_discord_notifications=True):
         self.logger.info(f"############################## Started adding new torrents (downloadAnimeFromList) ##############################")
         conn, cursor = self.getDbConnAndCursor()
         if conn == 2:
@@ -195,4 +199,4 @@ class UpdateAnimeDownloads:
 
         for anime in anime_list_to_download:
             self.logger.info(f"Adding anime {anime[0]}, episode {anime[1]}")
-            qbt_client.addTorent(anime)
+            qbt_client.addTorent(anime, send_discord_notifications)

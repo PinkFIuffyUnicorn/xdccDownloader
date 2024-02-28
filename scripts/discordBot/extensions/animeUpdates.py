@@ -56,7 +56,10 @@ class AnimeUpdates(commands.Cog):
                     episode = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
                     self.added_anime["episode"] = episode.content
                 if not self.added_anime.get("torrent_provider"):
-                    await ctx.send("**Torrent Provider**")
+                    cursor.execute("select distinct(torrent_provider) from anime_to_download where torrent_provider is not null")
+                    torrent_providers = cursor.fetchall()
+                    torrent_providers = u" | ".join(([x[0] for x in torrent_providers]))
+                    await ctx.send(f"**Torrent Provider ({torrent_providers})**")
                     torrent_provider = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
                     self.added_anime["torrent_provider"] = torrent_provider.content
                 if not self.added_anime.get("live_chart_url"):
@@ -93,17 +96,18 @@ class AnimeUpdates(commands.Cog):
 
                 await ctx.send(embed=embed)
 
-                add_anime = False
-                while True:
-                    user_response = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
-                    user_response = user_response.content
-                    if user_response.lower() not in ("y", "n", "yes", "no"):
-                        await ctx.send("Incorrect response, respond with ```y, n, yes, no```")
-                        continue
-                    elif user_response.lower() in ("y", "yes"):
-                        add_anime = True
-                        break
-                    break
+                # add_anime = False
+                # while True:
+                #     user_response = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
+                #     user_response = user_response.content
+                #     if user_response.lower() not in ("y", "n", "yes", "no"):
+                #         await ctx.send("Incorrect response, respond with ```y, n, yes, no```")
+                #         continue
+                #     elif user_response.lower() in ("y", "yes"):
+                #         add_anime = True
+                #         break
+                #     break
+                add_anime = True
 
                 if add_anime:
                     # dirPath = pathlib.Path(__file__).parent.parent.parent.resolve()
@@ -156,7 +160,7 @@ class AnimeUpdates(commands.Cog):
     )
     async def updateAnimeDownloads(self, ctx, *args):
         if "UpdateAnimeDownloads" in self.bot.common_functions.getAllActiveThreadsName():
-            await ctx.send("Downloading is already running, check notifications channel for more information.")
+            await ctx.send("Download is already running, check notifications channel for more information.")
             return False
         animeName = None
         if len(args) > 1:
@@ -180,6 +184,28 @@ class AnimeUpdates(commands.Cog):
             await ctx.send("Download is already running, check notifications channel for more information.")
             return False
         thread = threading.Thread(target=self.bot.common_functions.updateAnimeDownloadsCommon, args=(ctx.channel.id, None, True),
+                                  name="UpdateAnimeDownloads")
+        thread.start()
+
+    @commands.command(
+        name="silentAnimeUpdate",
+        aliases=["silentUpdate"],
+        description="Check for new episodes to be downloaded - Without Discord notifications",
+        help='Usage `!silentUpdate "anime name" ` "anime name" is optional, add it to check for a specific anime'
+    )
+    async def silentAnimeUpdate(self, ctx, *args):
+        if "UpdateAnimeDownloads" in self.bot.common_functions.getAllActiveThreadsName():
+            await ctx.send("Downloading is already running, check notifications channel for more information.")
+            return False
+        animeName = None
+        if len(args) > 1:
+            await ctx.send(
+                'Incorrect syntax, usage: ```!silentAnimeUpdate``` or ```!silentAnimeUpdate "anime name"```')
+            return False
+        elif len(args) == 1:
+            animeName = args[0]
+        thread = threading.Thread(target=self.bot.common_functions.updateAnimeDownloadsCommon,
+                                  args=(ctx.channel.id, animeName, False, False),
                                   name="UpdateAnimeDownloads")
         thread.start()
 

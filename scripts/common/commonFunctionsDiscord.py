@@ -8,13 +8,15 @@ from time import sleep
 from scripts.config import config
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
+from scripts.common.commonFunctions import CommonFunctions
 
 
-class CommonFunctionsDiscord():
+class CommonFunctionsDiscord:
     def __init__(self):
         self.sql_server_name = config.sqlServerName
         self.database = config.database
         self.token = config.tokenSana
+        self.common_functions = CommonFunctions()
         self.discord_bot_headers = {
             "Authorization": f"Bot {self.token}",
             "User-Agent": "MyBot/1.0",
@@ -61,7 +63,7 @@ class CommonFunctionsDiscord():
         """)
         return cursor.fetchall()
 
-    def sendInitialEmbed(self, anime_list, torrent_download=True):
+    def sendInitialEmbed(self, anime_list, torrent_download=True, send_discord_progress=True):
         discord_url_list = []
         channel_ids = self.getDiscordGuildChannelLocations()
         for channel_id in channel_ids:
@@ -101,19 +103,20 @@ class CommonFunctionsDiscord():
             # embeds.append(embed)
             payload["embed"] = embed_dict
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                results = tuple(executor.map(
-                    lambda url: (response := requests.post(url, json=payload, headers=self.discord_bot_headers).json()) and (
-                        response["id"], response["channel_id"]), discord_url_list))
-                temp_discord_url_list = []
-                for message_channel_id in results:
-                    message_id = message_channel_id[0]
-                    channel_id = message_channel_id[1]
-                    temp_discord_url_list.append(
-                        f"https://discordapp.com/api/v6/channels/{channel_id}/messages/{message_id}")
-                anime_list[index].append(temp_discord_url_list)
-
-            # anime_list[index].append(["https://discordapp.com/api/v6/channels/{channel_id}/messages/"])
+            if send_discord_progress:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    results = tuple(executor.map(
+                        lambda url: (response := requests.post(url, json=payload, headers=self.discord_bot_headers).json()) and (
+                            response["id"], response["channel_id"]), discord_url_list))
+                    temp_discord_url_list = []
+                    for message_channel_id in results:
+                        message_id = message_channel_id[0]
+                        channel_id = message_channel_id[1]
+                        temp_discord_url_list.append(
+                            f"https://discordapp.com/api/v6/channels/{channel_id}/messages/{message_id}")
+                    anime_list[index].append(temp_discord_url_list)
+            else:
+                anime_list[index].append(["https://discordapp.com/api/v6/channels/{channel_id}/messages/"])
             sleep(1)
 
         return anime_list
@@ -137,14 +140,17 @@ class CommonFunctionsDiscord():
 
         return day_of_week
 
-    def updateAnimeDownloadsCommon(self, channel_id, anime_name=None, current_day=False):
+    def sendDiscordFeedback(self, download_list, channel_id):
+        information_text = "" if len(download_list) == 0 else " check the notifications channel for more information"
+        requests.post(url=f"https://discordapp.com/api/v6/channels/{channel_id}/messages",
+                      json={"content": f"Found {len(download_list)} episodes to download{information_text}."},
+                      headers=self.discord_bot_headers)
+
+    def updateAnimeDownloadsCommon(self, channel_id, anime_name=None, current_day=False, send_discord_notifications=True):
         update_anime_downloads = UpdateAnimeDownloads(anime_name, current_day)
         get_list_to_download = update_anime_downloads.getAnimeListFromDb()
-        if channel_id is not None:
-            information_text = "" if len(get_list_to_download) == 0 else " check the notifications channel for more information"
-            requests.post(url=f"https://discordapp.com/api/v6/channels/{channel_id}/messages",
-                          json={"content": f"Found {len(get_list_to_download)} episodes to download{information_text}."},
-                          headers=self.discord_bot_headers)
+        if channel_id is not None and send_discord_notifications:
+            self.common_functions.retryOnException(self.sendDiscordFeedback, (get_list_to_download, channel_id))
         if len(get_list_to_download) != 0:
-            anime_list = self.sendInitialEmbed(get_list_to_download)
-            update_anime_downloads.downloadAnimeFromList(anime_list)
+            anime_list = self.sendInitialEmbed(get_list_to_download, send_discord_progress=send_discord_notifications)
+            update_anime_downloads.downloadAnimeFromList(anime_list, send_discord_notifications)

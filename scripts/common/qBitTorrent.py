@@ -47,7 +47,7 @@ class QBitTorrent():
         else:
             return f"{seconds:02d}s"
 
-    def addTorent(self, anime: list):
+    def addTorent(self, anime: list, send_discord_notifications: bool = True):
         anime_name = anime[0]
         self.logger.debug(f"Adding torrent for anime: {anime_name}")
         episode = "0" + str(anime[1]) if len(str(anime[1])) == 1 else anime[1]
@@ -72,8 +72,9 @@ class QBitTorrent():
         while not os.path.exists(f"{save_path}/{filename}") and retries < 61:
             retries += 1
             sleep(1)
-        thread = threading.Thread(target=self.sendProgress, args=(torrent_hash, anime), name=f"send_progress_{anime_name}_{seasonEpisode}")
-        thread.start()
+        if send_discord_notifications:
+            thread = threading.Thread(target=self.sendProgress, args=(torrent_hash, anime), name=f"send_progress_{anime_name}_{seasonEpisode}")
+            thread.start()
 
     def getTorrentByName(self, filename: str, category: str):
         while True:
