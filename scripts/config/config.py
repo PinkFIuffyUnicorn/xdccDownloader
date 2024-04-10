@@ -10,8 +10,8 @@ config = configparser.ConfigParser()
 config.read(config_path)
 # Plex Config
 plexCredentials = config["PlexCredentials"]
-username = plexCredentials["username"]
-password = plexCredentials["password"]
+plexUsername = plexCredentials["username"]
+plexPassword = plexCredentials["password"]
 plexServerName = plexCredentials["plexServerName"]
 # Database Config
 databaseConfig = config["Database"]
@@ -28,6 +28,10 @@ tokenSana = discordBotConfig["tokenSana"]
 # SubsPlease
 subsPleaseConfig = config["SubsPleaseRSSFeed"]
 url1080 = subsPleaseConfig["url1080"]
+# Live Chart Config
+liveChartConfig = config["LiveChart"]
+liveChartUsername = liveChartConfig["username"]
+liveChartPassword = liveChartConfig["password"]
 # Logger
 logger = Logger(logging.INFO).log()
 # logger = Logger(logging.DEBUG).log()

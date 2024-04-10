@@ -1,11 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 from scripts.common.enumDays import Days
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
+from scripts.common.liveChartInteractions import LiveChartInteractions
 import threading
 from scripts.config import config
 import sys
@@ -35,51 +31,20 @@ class AnimeUpdates(commands.Cog):
                     await ctx.send("You don't have permissions for this command")
                     return
                 conn, cursor = self.bot.common_functions.connectToDb()
-                if not self.added_anime.get("name"):
-                    await ctx.send("**Anime Name**")
-                    name = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
-                    self.added_anime["name"] = name.content
-                if not self.added_anime.get("dir_name"):
-                    await ctx.send("**Dir Name**")
-                    dir_name = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
-                    self.added_anime["dir_name"] = dir_name.content
-                if not self.added_anime.get("english_name"):
-                    await ctx.send("**English Name**")
-                    english_name = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
-                    self.added_anime["english_name"] = english_name.content
-                if not self.added_anime.get("current_season"):
-                    await ctx.send("**Current Season**")
-                    current_season = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
-                    self.added_anime["current_season"] = current_season.content
-                if not self.added_anime.get("episode"):
-                    await ctx.send("**Episode**")
-                    episode = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
-                    self.added_anime["episode"] = episode.content
-                if not self.added_anime.get("torrent_provider"):
-                    cursor.execute("select distinct(torrent_provider) from anime_to_download where torrent_provider is not null")
-                    torrent_providers = cursor.fetchall()
-                    torrent_providers = u" | ".join(([x[0] for x in torrent_providers]))
-                    await ctx.send(f"**Torrent Provider ({torrent_providers})**")
-                    torrent_provider = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
-                    self.added_anime["torrent_provider"] = torrent_provider.content
                 if not self.added_anime.get("live_chart_url"):
                     await ctx.send("**LiveChart Url**")
                     live_chart_url = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
                     self.added_anime["live_chart_url"] = live_chart_url.content
-
-                if not self.added_anime.get("image_url") or not self.added_anime.get("download_day"):
-                    options = Options()
-                    options.add_argument("--headless")
-                    driver = webdriver.Chrome(service=Service(
-                        ChromeDriverManager().install()),
-                        options=options
-                    )
-                    driver.get(self.added_anime["live_chart_url"])
-                    # image = driver.find_elements(By.XPATH, "//div[@class='anime-poster']/img")
-                    image = driver.find_elements(By.XPATH, "//img[@class='overflow-hidden rounded']")
-                    self.added_anime["image_url"] = image[0].get_attribute("src")
-
-                    self.added_anime["download_day"] = self.bot.common_functions.getDayOfTheWeekFromUnix(driver)
+                live_chart_client = LiveChartInteractions(self.added_anime["live_chart_url"])
+                name, dir_name, english_name, current_season, current_episode, torrent_provider, image, download_day = live_chart_client.get_notes()
+                self.added_anime["name"] = name
+                self.added_anime["dir_name"] = dir_name
+                self.added_anime["english_name"] = english_name
+                self.added_anime["current_season"] = current_season
+                self.added_anime["episode"] = current_episode
+                self.added_anime["torrent_provider"] = torrent_provider
+                self.added_anime["image_url"] = image
+                self.added_anime["download_day"] = download_day
 
                 embed = discord.Embed(
                     title="Add this anime to the download list? (Y/N)",
@@ -96,18 +61,18 @@ class AnimeUpdates(commands.Cog):
 
                 await ctx.send(embed=embed)
 
-                # add_anime = False
-                # while True:
-                #     user_response = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
-                #     user_response = user_response.content
-                #     if user_response.lower() not in ("y", "n", "yes", "no"):
-                #         await ctx.send("Incorrect response, respond with ```y, n, yes, no```")
-                #         continue
-                #     elif user_response.lower() in ("y", "yes"):
-                #         add_anime = True
-                #         break
-                #     break
-                add_anime = True
+                add_anime = False
+                while True:
+                    user_response = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
+                    user_response = user_response.content
+                    if user_response.lower() not in ("y", "n", "yes", "no"):
+                        await ctx.send("Incorrect response, respond with ```y, n, yes, no```")
+                        continue
+                    elif user_response.lower() in ("y", "yes"):
+                        add_anime = True
+                        break
+                    break
+                # add_anime = True
 
                 if add_anime:
                     # dirPath = pathlib.Path(__file__).parent.parent.parent.resolve()

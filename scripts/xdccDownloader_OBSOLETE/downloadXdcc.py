@@ -34,8 +34,8 @@ database = config.database
 driverNiblUrl = config.driverNiblUrl
 parentDir = config.parentDir
 # Plex Config
-username = config.username
-password = config.password
+username = config.plexUsername
+password = config.plexPassword
 plexServerName = config.plexServerName
 # Other Variables
 dbBackupPath = rf"C:\Users\Aleš\Desktop\GitHub\xdccDownloader\DB Backups\animeBKP_{currentTimestamp('db')}.bak"

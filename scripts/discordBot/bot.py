@@ -13,8 +13,8 @@ class MyBot(commands.Bot):
         self.logger = config.logger
         self.common_functions = CommonFunctionsDiscord()
         # Plex Config
-        self.username = config.username
-        self.password = config.password
+        self.username = config.plexUsername
+        self.password = config.plexPassword
         self.plexServerName = config.plexServerName
         # Database Config
         self.sql_server_name = config.sqlServerName

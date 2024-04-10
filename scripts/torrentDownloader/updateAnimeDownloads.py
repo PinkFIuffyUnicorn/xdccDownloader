@@ -19,8 +19,8 @@ class UpdateAnimeDownloads:
         self.sqlServerName = config.sqlServerName
         self.database = config.database
         # Plex Config
-        self.username = config.username
-        self.password = config.password
+        self.username = config.plexUsername
+        self.password = config.plexPassword
         self.plexServerName = config.plexServerName
         # SubsPlease RSS Feed
         self.subsplease_url = config.url1080

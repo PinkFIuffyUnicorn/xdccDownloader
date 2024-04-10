@@ -12,7 +12,7 @@ class UncategorizedCommands(commands.Cog):
         help="Usage `!updateAnimePlexLibrary`"
     )
     async def updateAnimePlexLibrary(self, ctx):
-        myPlexLibrary = PlexLibrary(self.bot.username, self.bot.password, self.bot.plexServerName, "Anime")
+        myPlexLibrary = PlexLibrary(self.bot.plexUsername, self.bot.plexPassword, self.bot.plexServerName, "Anime")
         myPlexLibrary.updatePlexLibraryData()
         await ctx.send("Anime Library Updated Successfully!")
 

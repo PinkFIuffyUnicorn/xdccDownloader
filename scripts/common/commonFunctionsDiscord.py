@@ -132,14 +132,6 @@ class CommonFunctionsDiscord:
 
         return day_of_week
 
-    def getDayOfTheWeekFromUnix(self, driver):
-        countdown_bar = driver.find_elements(By.XPATH, "//div[@data-controller='countdown-bar']")[0]
-        countdown_bar.get_attribute("data-countdown-bar-timestamp")
-        dt = datetime.fromtimestamp(1697299200)
-        day_of_week = dt.strftime("%u")
-
-        return day_of_week
-
     def sendDiscordFeedback(self, download_list, channel_id):
         information_text = "" if len(download_list) == 0 else " check the notifications channel for more information"
         requests.post(url=f"https://discordapp.com/api/v6/channels/{channel_id}/messages",

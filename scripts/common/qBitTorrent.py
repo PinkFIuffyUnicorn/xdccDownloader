@@ -175,5 +175,5 @@ class QBitTorrent():
                 results = executor.map(lambda url_list: self.fetchWithRetry(url_list, payload), discord_url_list)
                 # tuple(executor.map(lambda url: (response := requests.patch(url, json=payload, headers=self.discord_bot_headers).json()),
                 #                    discord_url_list))
-        myPlexLibrary = PlexLibrary(config.username, config.password, config.plexServerName, "Anime")
+        myPlexLibrary = PlexLibrary(config.plexUsername, config.plexPassword, config.plexServerName, "Anime")
         myPlexLibrary.updatePlexLibraryData()
