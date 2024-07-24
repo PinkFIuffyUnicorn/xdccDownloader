@@ -15,7 +15,7 @@ class AnimeUpdates(commands.Cog):
         self.max_attempts = 5
         self.retry_add = True
         self.logger = config.logger
-        # self.updateAnimeDownloadsForTodayLoop.start()
+        self.updateAnimeDownloadsForTodayLoop.start()
 
     @commands.command(
         name="addAnime",
@@ -179,7 +179,8 @@ class AnimeUpdates(commands.Cog):
         if "UpdateAnimeDownloads" in self.bot.common_functions.getAllActiveThreadsName():
             print("Download is already running")
             return False
-        thread = threading.Thread(target=self.bot.common_functions.updateAnimeDownloadsCommon, args=(None, None, True),
+        thread = threading.Thread(target=self.bot.common_functions.updateAnimeDownloadsCommon,
+                                  args=(None, None, True),
                                   name="UpdateAnimeDownloads")
         thread.start()
 
