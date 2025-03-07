@@ -120,6 +120,7 @@ class UpdateAnimeDownloads:
 
             while True:
                 searchTerm = f"{name} - {'0' + str(episode) if len(str(episode)) == 1 else episode}"
+                exclude_search_term = ""
                 # if name == "Summer Time Rendering":
                 #     searchTerm = f"{name} S01E{'0' + str(episode) if len(str(episode)) == 1 else episode}"
                 if torrent_provider == "Chihiro":
@@ -127,8 +128,13 @@ class UpdateAnimeDownloads:
                 elif torrent_provider == "EMBER":
                     searchCurrentSeason = f"{'0' + str(current_season) if len(str(current_season)) == 1 else current_season}"
                     searchTerm = f"{name} S{searchCurrentSeason}E{'0' + str(episode) if len(str(episode)) == 1 else episode}"
+                elif torrent_provider == "Erai-raws":
+                    exclude_search_term = "[not(contains(text(), 'HEVC'))]"
+                elif torrent_provider == "DKB":
+                    searchCurrentSeason = f"{'0' + str(current_season) if len(str(current_season)) == 1 else current_season}"
+                    searchTerm = f"{name} - S{searchCurrentSeason}E{'0' + str(episode) if len(str(episode)) == 1 else episode}"
                 self.logger.debug(f"Search term for {name}: {searchTerm}")
-                items = root.xpath(f".//item/title[contains(text(), '{searchTerm}')]")
+                items = root.xpath(f".//item/title[contains(text(), '{searchTerm}')]{exclude_search_term}")
                 items = [item.getparent() for item in items]
                 for index, item in enumerate(items):
                     if index == 0:

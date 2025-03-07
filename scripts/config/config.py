@@ -33,5 +33,5 @@ liveChartConfig = config["LiveChart"]
 liveChartUsername = liveChartConfig["username"]
 liveChartPassword = liveChartConfig["password"]
 # Logger
-logger = Logger(logging.INFO).log()
-# logger = Logger(logging.DEBUG).log()
+# logger = Logger(logging.INFO).log()
+logger = Logger(logging.DEBUG).log()

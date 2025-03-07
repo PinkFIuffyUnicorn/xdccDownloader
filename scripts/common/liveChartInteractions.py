@@ -36,7 +36,10 @@ class LiveChartInteractions:
                         }
 
     def getDayOfTheWeekFromUnix(self):
-        countdown_bar = self.driver.find_elements(By.XPATH, "//div[@data-controller='countdown-bar']")[0]
+        countdown_bar_list = self.driver.find_elements(By.XPATH, "//div[@data-controller='countdown-bar']")
+        if len(countdown_bar_list) == 0:
+            return "1"
+        countdown_bar = countdown_bar_list[0]
         unix_timestamp = countdown_bar.get_attribute("data-countdown-bar-timestamp")
         # print(unix_timestamp)
         dt = datetime.fromtimestamp(int(unix_timestamp))
@@ -96,7 +99,11 @@ class LiveChartInteractions:
             image = images_split[1].strip().split(" ")[0]
         else:
             image = images_split[0].split(" ")[0]
-        download_day = self.getDayOfTheWeekFromUnix()
+
+        try:
+            download_day = self.getDayOfTheWeekFromUnix()
+        except:
+            download_day = ""
 
         name = self.get_value(name, "data-anime-details-romaji-title")
         dir_name = self.get_value(dir_name, "data-anime-details-romaji-title")

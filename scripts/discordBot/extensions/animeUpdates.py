@@ -15,7 +15,7 @@ class AnimeUpdates(commands.Cog):
         self.max_attempts = 5
         self.retry_add = True
         self.logger = config.logger
-        self.updateAnimeDownloadsForTodayLoop.start()
+        # self.updateAnimeDownloadsForTodayLoop.start()
 
     @commands.command(
         name="addAnime",
@@ -61,18 +61,18 @@ class AnimeUpdates(commands.Cog):
 
                 await ctx.send(embed=embed)
 
-                add_anime = False
-                while True:
-                    user_response = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
-                    user_response = user_response.content
-                    if user_response.lower() not in ("y", "n", "yes", "no"):
-                        await ctx.send("Incorrect response, respond with ```y, n, yes, no```")
-                        continue
-                    elif user_response.lower() in ("y", "yes"):
-                        add_anime = True
-                        break
-                    break
-                # add_anime = True
+                # add_anime = False
+                # while True:
+                #     user_response = await self.bot.wait_for("message", check=self.bot.common_functions.check(ctx.author))
+                #     user_response = user_response.content
+                #     if user_response.lower() not in ("y", "n", "yes", "no"):
+                #         await ctx.send("Incorrect response, respond with ```y, n, yes, no```")
+                #         continue
+                #     elif user_response.lower() in ("y", "yes"):
+                #         add_anime = True
+                #         break
+                #     break
+                add_anime = True
 
                 if add_anime:
                     # dirPath = pathlib.Path(__file__).parent.parent.parent.resolve()

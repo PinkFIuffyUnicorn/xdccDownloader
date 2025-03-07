@@ -54,10 +54,11 @@ class QBitTorrent():
         # season = "0" + str(anime[2]) if len(str(anime[2])) == 1 else anime[2]
         torrent_url = anime[4]
         save_path = f"{config.parentDir}/{anime_name}/Season {anime[2]}"
-        seasonEpisode = "01" if anime[1] != 0 else "00"
         if os.path.isdir(save_path):
             seasonEpisode = len([x for x in fnmatch.filter(os.listdir(save_path), "*.mkv") if "- 00 (" not in x]) + 1
             seasonEpisode = "0" + str(seasonEpisode) if len(str(seasonEpisode)) == 1 else seasonEpisode
+        else:
+            seasonEpisode = "01" if anime[1] != 0 else "00"
         # filename = f"{anime_name} - s{season}e{seasonEpisode} (1080p) [{episode}].mkv"
         filename = f"{anime_name} - {seasonEpisode} (1080p) [{episode}].mkv"
         self.client.torrents_add(urls=torrent_url, save_path=save_path, rename=filename, category=anime_name)
