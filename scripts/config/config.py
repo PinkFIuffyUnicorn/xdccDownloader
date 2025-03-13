@@ -32,6 +32,7 @@ url1080 = subsPleaseConfig["url1080"]
 liveChartConfig = config["LiveChart"]
 liveChartUsername = liveChartConfig["username"]
 liveChartPassword = liveChartConfig["password"]
+liveChartProfilePlanningUrl = liveChartConfig["profilePlanningUrl"]
 # Logger
 # logger = Logger(logging.INFO).log()
 logger = Logger(logging.DEBUG).log()
