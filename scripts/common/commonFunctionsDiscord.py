@@ -73,7 +73,6 @@ class CommonFunctionsDiscord:
         embeds = []
         payload = {"embed": embeds}
 
-        # ["", "", "name", "episode", "season", "image"]
         for index, anime in enumerate(anime_list):
             if torrent_download:
                 anime_name = anime[0]

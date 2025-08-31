@@ -34,5 +34,5 @@ liveChartUsername = liveChartConfig["username"]
 liveChartPassword = liveChartConfig["password"]
 liveChartProfilePlanningUrl = liveChartConfig["profilePlanningUrl"]
 # Logger
-# logger = Logger(logging.INFO).log()
-logger = Logger(logging.DEBUG).log()
+logger = Logger(logging.INFO).log()
+# logger = Logger(logging.DEBUG).log()

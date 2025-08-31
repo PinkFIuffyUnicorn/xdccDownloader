@@ -123,9 +123,9 @@ class UpdateAnimeDownloads:
                 exclude_search_term = ""
                 # if name == "Summer Time Rendering":
                 #     searchTerm = f"{name} S01E{'0' + str(episode) if len(str(episode)) == 1 else episode}"
-                if torrent_provider == "Chihiro":
-                    searchTerm = f"{name} {'0' + str(episode) if len(str(episode)) == 1 else episode}"
-                elif torrent_provider == "EMBER":
+                # if torrent_provider == "Chihiro":
+                #     searchTerm = f"{name} {'0' + str(episode) if len(str(episode)) == 1 else episode}"
+                if torrent_provider == "EMBER":
                     searchCurrentSeason = f"{'0' + str(current_season) if len(str(current_season)) == 1 else current_season}"
                     searchTerm = f"{name} S{searchCurrentSeason}E{'0' + str(episode) if len(str(episode)) == 1 else episode}"
                 elif torrent_provider == "Erai-raws":
@@ -140,7 +140,7 @@ class UpdateAnimeDownloads:
                     if index == 0:
                         self.logger.info(f"Found {len(items)} episodes for {name}")
                     torrent_link = item[1].text
-                    current_anime = [dir_name, episode, current_season, live_chart_image_url, torrent_link, english_name]
+                    current_anime = [name, episode, current_season, live_chart_image_url, torrent_link, english_name, dir_name]
                     self.logger.debug(f"Current Anime Data: {str(current_anime)}")
                     animeList.append(current_anime)
 
@@ -201,7 +201,7 @@ class UpdateAnimeDownloads:
         if conn == 2:
             sys.exit(cursor)
 
-        qbt_client = QBitTorrent("localhost", 8080)
+        qbt_client = QBitTorrent("127.0.0.1", 8080)
 
         for anime in anime_list_to_download:
             self.logger.info(f"Adding anime {anime[0]}, episode {anime[1]}")

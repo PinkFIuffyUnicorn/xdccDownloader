@@ -49,21 +49,22 @@ class QBitTorrent():
 
     def addTorent(self, anime: list, send_discord_notifications: bool = True):
         anime_name = anime[0]
+        dir_name = anime[6]
         self.logger.debug(f"Adding torrent for anime: {anime_name}")
         episode = "0" + str(anime[1]) if len(str(anime[1])) == 1 else anime[1]
-        # season = "0" + str(anime[2]) if len(str(anime[2])) == 1 else anime[2]
+        season = "0" + str(anime[2]) if len(str(anime[2])) == 1 else anime[2]
         torrent_url = anime[4]
-        save_path = f"{config.parentDir}/{anime_name}/Season {anime[2]}"
+        save_path = f"{config.parentDir}/{dir_name}/Season {season}"
         if os.path.isdir(save_path):
             seasonEpisode = len([x for x in fnmatch.filter(os.listdir(save_path), "*.mkv") if "- 00 (" not in x]) + 1
             seasonEpisode = "0" + str(seasonEpisode) if len(str(seasonEpisode)) == 1 else seasonEpisode
         else:
             seasonEpisode = "01" if anime[1] != 0 else "00"
         # filename = f"{anime_name} - s{season}e{seasonEpisode} (1080p) [{episode}].mkv"
-        filename = f"{anime_name} - {seasonEpisode} (1080p) [{episode}].mkv"
-        self.client.torrents_add(urls=torrent_url, save_path=save_path, rename=filename, category=anime_name)
+        filename = f"{dir_name} - s{season}e{seasonEpisode} (1080p) [{episode}].mkv"
+        self.client.torrents_add(urls=torrent_url, save_path=save_path, rename=filename, category=dir_name, is_sequential_download=True)
         self.logger.debug(f"Added torrent file: {filename}")
-        torrent = self.getTorrentByName(filename, anime_name)
+        torrent = self.getTorrentByName(filename, dir_name)
         torrent_hash = torrent.hash
         self.client.torrents_pause(torrent_hash)
         for file in torrent.files:
@@ -71,6 +72,7 @@ class QBitTorrent():
         self.client.torrents_resume(torrent_hash)
         retries = 0
         while not os.path.exists(f"{save_path}/{filename}") and retries < 61:
+            self.logger.debug(f"File Path for: '{save_path}/{filename}' | {os.path.exists(f'{save_path}/{filename}')}")
             retries += 1
             sleep(1)
         if send_discord_notifications:
@@ -110,7 +112,7 @@ class QBitTorrent():
         current_season = anime[2]
         live_chart_image_url = anime[3]
         english_name = anime[5]
-        discord_url_list = anime[6]
+        discord_url_list = anime[-1]
         download_status = "Preparing Download"
         torrent = self.getTorrentByHash(torrent_hash)
 

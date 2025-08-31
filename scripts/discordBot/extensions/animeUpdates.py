@@ -19,10 +19,10 @@ class AnimeUpdates(commands.Cog):
 
 
     @commands.command(
-        name="addAnimeFromLiveChartsProfile",
+        name="addAnimeFromLiveCharts",
         aliases=["addFromProfile"],
         description="Add new anime to the download list, from all the marks on LiveCharts.me",
-        help="Usage `!addAnimeFromLiveChartsProfile`"
+        help="Usage `!addAnimeFromLiveCharts`"
     )
     async def addAnimeFromLiveCharts(self, ctx):
         # self.logger.info(f"User {ctx.author.name} ran the command addAnimeFromLiveCharts")
@@ -34,11 +34,11 @@ class AnimeUpdates(commands.Cog):
                     await ctx.send("You don't have permissions for this command")
                     return
                 conn, cursor = self.bot.common_functions.connectToDb()
-                live_chart_client = LiveChartInteractions(config.liveChartProfilePlanningUrl)
-                anime_to_add_list = live_chart_client.get_planning_anime()
+                live_chart_client = LiveChartInteractions(config.liveChartProfilePlanningUrl).anime_login()
+                anime_to_add_list = live_chart_client.get_planning_anime(True)
                 for anime_to_add in anime_to_add_list:
-                    if anime_to_add[0] != "Ao no Hako":
-                        return
+                    # if anime_to_add[0] != "Ao no Hako":
+                    #     return
                     self.added_anime["name"] = anime_to_add[0]
                     self.added_anime["dir_name"] = anime_to_add[1]
                     self.added_anime["english_name"] = anime_to_add[2]
@@ -80,8 +80,8 @@ class AnimeUpdates(commands.Cog):
                     cursor.commit()
                     await ctx.send(f"Successfully Added Anime: `{self.added_anime['name']}`")
 
-                    live_chart_client.set_status_to_watching(self.added_anime["live_chart_url"])
-                    live_chart_client.driver_quit()
+                    live_chart_client.set_status_to_watching(self.added_anime["live_chart_url"], True)
+                live_chart_client.driver_quit()
 
                 conn.commit()
                 conn.close()
@@ -183,6 +183,9 @@ class AnimeUpdates(commands.Cog):
                     """)
                     cursor.commit()
                     await ctx.send(f"Successfully Added Anime: `{self.added_anime['name']}`")
+
+                    # live_chart_client.set_status_to_watching(self.added_anime["live_chart_url"])
+                    live_chart_client.driver_quit()
 
                 conn.commit()
                 conn.close()

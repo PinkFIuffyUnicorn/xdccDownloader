@@ -186,3 +186,8 @@ def getMissingAnimeInDb(directory):
 
 # find_missing_images(rootDir)
 get_missing_episodes("A:\Anime")
+
+
+# reception.istrian.villas@plavalaguna.com
+# tmno plava
+# hellihansen (HH)

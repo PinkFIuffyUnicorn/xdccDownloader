@@ -87,6 +87,8 @@ class LiveChartInteractions:
 
         self.logger.debug("Login successful")
 
+        return self
+
 
     def get_notes(self, already_logged_in):
         if not already_logged_in:
@@ -131,13 +133,14 @@ class LiveChartInteractions:
 
         # print(name, dir_name, english_name, current_season, current_episode, torrent_provider, image, download_day)
 
-        if not already_logged_in:
-            self.driver_quit()
+        # if not already_logged_in:
+        #     self.driver_quit()
 
         return [name, dir_name, english_name, current_season, current_episode, torrent_provider, image, download_day]
 
-    def get_planning_anime(self):
-        self.anime_login()
+    def get_planning_anime(self, already_logged_in):
+        if not already_logged_in:
+            self.anime_login()
 
         article_list = WebDriverWait(self.driver, 60).until(EC.presence_of_all_elements_located((By.XPATH, "//article")))
         original_window = self.driver.current_window_handle
@@ -151,7 +154,7 @@ class LiveChartInteractions:
             self.driver.switch_to.window(self.driver.window_handles[-1])
             live_chart_url = f"https://www.livechart.me/anime/{anime_id}"
             self.driver.get(live_chart_url)
-
+            # print(anime_id)
             try:
                 next_episode = WebDriverWait(self.driver, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='line-clamp-1 text-sm text-base-content/75 link-hover']/span")))[0].text
                 next_episode = next_episode.replace("EP", "")
@@ -167,12 +170,16 @@ class LiveChartInteractions:
             library_notes.append(live_chart_url)
             library_notes_list.append(library_notes)
 
+            # print(library_notes)
+
             self.driver.close()
             self.driver.switch_to.window(original_window)
 
         return library_notes_list
 
-    def set_status_to_watching(self, live_chart_url):
+    def set_status_to_watching(self, live_chart_url, already_logged_in):
+        if not already_logged_in:
+            self.anime_login()
         self.driver.get(live_chart_url)
 
         self.common_functions.retryOnException(lambda: self.driver.find_elements(By.XPATH, "//button[@class='-mr-4 btn btn-circle btn-ghost']")[0].click(), delay=2)
